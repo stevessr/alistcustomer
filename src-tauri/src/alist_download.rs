@@ -39,16 +39,22 @@ pub async fn download_and_extract_alist(proxy_url: Option<String>) -> Result<(),
         .map_err(|e| format!("Failed to read response bytes: {}", e))?;
 
     // 使用 zip 库解压文件
-    let archive = ZipArchive::new(Cursor::new(bytes))
+    let mut archive = ZipArchive::new(Cursor::new(bytes.clone()))
         .map_err(|e| format!("Failed to open zip archive: {}", e))?;
+
+    // 将 bytes 克隆到循环外部
+    let value = bytes.clone();
 
     for i in 0..archive.len() {
         let outpath = archive.by_index(i)
             .map_err(|e| format!("Failed to read file in zip archive: {}", e))?
             .name().to_string();
 
+        // 在每次迭代时克隆 value
+        let value_clone = value.clone();
+
         let contents = spawn_blocking(move || {
-            let mut archive = ZipArchive::new(Cursor::new(bytes))
+            let mut archive = ZipArchive::new(Cursor::new(value_clone))
                 .map_err(|e| format!("Failed to open zip archive: {}", e))?;
             let mut file = archive.by_index(i)
                 .map_err(|e| format!("Failed to read file in zip archive: {}", e))?;
@@ -64,7 +70,7 @@ pub async fn download_and_extract_alist(proxy_url: Option<String>) -> Result<(),
                 contents.extend_from_slice(&buffer[..bytes_read]);
             }
 
-            Ok(contents)
+            Ok::<Vec<u8>, String>(contents)
         }).await.map_err(|e| format!("Failed to spawn blocking task: {}", e))??;
 
         let mut outfile = File::create(&outpath)
