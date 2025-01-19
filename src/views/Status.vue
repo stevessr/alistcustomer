@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref } from "vue";
 import { invoke } from "@tauri-apps/api/core";
+import alistversion from "./alistversion.vue";
 
 const status = ref<AlistStatus>({ running: false, pid: null });
 const message = ref("");
@@ -65,6 +66,9 @@ async function downloadAlist() {
     <br/>
     <n-button @click="showOptions = true">可选参数</n-button> <!-- 新增：打开可选参数菜单的按钮 -->
     <n-button @click="downloadAlist">下载 alist</n-button>
+    <br/>
+    <!--<alistversion></alistversion>-->
+    <alistversion></alistversion>
 
     <!-- 可选参数菜单 -->
     <n-modal v-model:show="showOptions" title="可选参数">
