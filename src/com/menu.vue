@@ -106,6 +106,24 @@ const menuOptions: MenuOption[] = [
   {
     label: () =>
       h(
+        "a",
+        {
+          href: "/config",
+          target: "_self",
+          rel: "noopenner noreferrer",
+          onClick: () => {
+            console.log("clicked config");
+          },
+        },
+        "配置文件编辑"
+      ),
+    key: "config",
+    icon: renderIcon(status),
+    disabled: false,
+  },
+  {
+    label: () =>
+      h(
         NButton,
         {
           type: "tertiary",

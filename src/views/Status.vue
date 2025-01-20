@@ -10,6 +10,8 @@ import {
   NCheckbox,
   NModal,
 } from "naive-ui";
+import { hide } from "@tauri-apps/api/app";
+import Change_password from "./components/change_password.vue";
 
 const status = ref<AlistStatus>({ running: false, pid: null });
 const message = ref("");
@@ -95,9 +97,11 @@ async function getAlistVersion() {
     <p>{{ message }}</p>
     <n-button @click="getAlistStatus">刷新状态</n-button>
     <n-button @click="startAlist" :disabled="status.running"
+    v-if="!status.running"
       >启动 alist</n-button
     >
     <n-button @click="stopAlist" :disabled="!status.running"
+    v-if="status.running"
       >停止 alist</n-button
     >
     <n-button @click="getAlistVersion">获取 alist 版本信息</n-button>
@@ -105,7 +109,8 @@ async function getAlistVersion() {
     <br />
     <n-button @click="showOptions = true">可选参数</n-button>
     <!-- 新增：打开可选参数菜单的按钮 -->
-    <n-button @click="downloadAlist">下载 alist</n-button>
+    <n-button @click="downloadAlist" :disabled="status.running" v-if="!status.running">下载 alist</n-button>
+    <Change_password></Change_password>
 
     <!-- 可选参数菜单 -->
     <n-modal v-model:show="showOptions" title="可选参数">

@@ -1,9 +1,10 @@
 use std::process::Command;
 use std::sync::Mutex;
 use tauri::State;
+use std::path::PathBuf;
 
 // 定义一个结构体来存储 alist 的路径
-pub struct AlistPath(pub Mutex<Option<String>>);
+pub struct AlistPath(pub Mutex<Option<PathBuf>>);
 
 #[tauri::command]
 pub async fn set_alist_password(

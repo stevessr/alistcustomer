@@ -20,7 +20,9 @@ pub fn run() {
             crate::alist::clean::delete_data_folder,
             crate::alist::download::download_and_extract_alist,
             crate::alist::get_version::get_alist_version,
-            crate::alist::reset_password::set_alist_password
+            crate::alist::reset_password::set_alist_password,
+            crate::alist::edit::read_config,
+            crate::alist::edit::write_config
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

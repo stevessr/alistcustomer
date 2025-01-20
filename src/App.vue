@@ -14,9 +14,11 @@ import MENU from "./com/menu.vue";
 </script>
 
 <template>
-    <MENU/>
-     <!-- 渲染路由匹配的组件 -->
-  <router-view></router-view>
+  <MENU />
+  <!-- 渲染路由匹配的组件 -->
+  <n-notification-provider>
+    <n-message-provider><router-view></router-view></n-message-provider
+  ></n-notification-provider>
 </template>
 
 <style scoped>
@@ -27,7 +29,6 @@ import MENU from "./com/menu.vue";
 .logo.vue:hover {
   filter: drop-shadow(0 0 2em #249b73);
 }
-
 </style>
 <style>
 :root {
@@ -139,5 +140,4 @@ button {
     background-color: #0f0f0f69;
   }
 }
-
 </style>

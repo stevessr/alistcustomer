@@ -11,15 +11,34 @@ use crate::alist::find_process::find_existing_alist_process;
 #[cfg(unix)]
 use std::os::unix::fs::PermissionsExt;
 
+impl AlistState {
+    // 检查 alist 是否已经在运行
+    pub fn is_alist_running(&self) -> bool {
+        self.with_process(|alist_process| {
+            alist_process.as_mut().map_or(false, |p: &mut std::process::Child| p.try_wait().is_ok())
+        }).unwrap_or(false) // 处理 Result<bool, String>，返回 bool
+    }
+
+    // 处理 alist 进程的退出
+    pub fn handle_process_exit(&self) {
+        self.with_process(|alist_process| {
+            if let Some(process) = alist_process {
+                if process.try_wait().is_ok() {
+                    *alist_process = None;
+                }
+            }
+        }).unwrap_or(()); // 忽略错误
+    }
+}
+
+
+
 #[tauri::command]
 pub async fn start_alist(state: tauri::State<'_, AlistState>) -> Result<AlistStatus, String> {
     // 检查是否已经在运行
-    if let Ok(Some(process)) = state.with_process(|alist_process| {
-        alist_process.as_mut().map(|p| (p.id(), p.try_wait()))
-    }) {
-        if let Ok(None) = process.1 {
-            return Ok(AlistStatus::new(true, Some(process.0)));
-        }
+    if state.is_alist_running() {
+        let pid = state.with_process(|p| p.as_ref().unwrap().id())?; // 使用 ? 解包 Result<u32, String>
+        return Ok(AlistStatus::new(true, Some(pid)));
     }
 
     // 自动寻找 alist 可执行文件

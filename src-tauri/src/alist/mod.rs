@@ -19,3 +19,5 @@ pub(crate) mod download;
 pub use download::download_and_extract_alist;
 pub(crate) mod share;
 pub use share::{AlistState, AlistPath, AlistStatus};
+pub(crate) mod edit;
+pub use edit::{read_config, write_config};

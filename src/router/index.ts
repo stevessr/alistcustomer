@@ -1,27 +1,32 @@
 // src/router/index.js
-import { createRouter, createWebHistory } from 'vue-router';
+import { createRouter, createWebHistory } from "vue-router";
 
 // 定义路由规则
 const routes = [
   {
-    path: '/',
-    name: 'Home',
-    component: () => import('../views/Home.vue'), // 懒加载组件
+    path: "/",
+    name: "Home",
+    component: () => import("../views/Home.vue"), // 懒加载组件
   },
   {
-    path: '/about',
-    name: 'About',
-    component: () => import('../views/About.vue'),
+    path: "/about",
+    name: "About",
+    component: () => import("../views/About.vue"),
   },
   {
-    path: '/alist',
-    name: 'alist',
-    component: () => import('../views/Alist.vue'),
+    path: "/alist",
+    name: "alist",
+    component: () => import("../views/Alist.vue"),
   },
   {
-    path: '/status',
-    name: 'status',
-    component: () => import('../views/Status.vue'),
+    path: "/status",
+    name: "status",
+    component: () => import("../views/status.vue"),
+  },
+  {
+    path: "/config",
+    name: "config",
+    component: () => import("../views/Config.vue"),
   },
 ];
 
