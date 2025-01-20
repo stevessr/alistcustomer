@@ -285,7 +285,8 @@ loadConfig();
         />
       </div>
     </div>
-    <form class="config-form config-grid" @submit.prevent="saveConfig">
+    <div class="config-layout">
+    <div class="config-grid">
       <draggable 
         v-model="configComponents"
         item-key="id"
@@ -304,10 +305,18 @@ loadConfig();
           </div>
         </template>
       </draggable>
-      <div class="form-actions">
-        <n-button type="submit" class="btn btn-primary">Save Configuration</n-button>
+      
+      <div class="config-actions-side">
+        <n-button 
+          type="submit" 
+          class="btn btn-primary"
+          @click="saveConfig"
+        >
+          Save Configuration
+        </n-button>
       </div>
-    </form>
+    </div>
+    </div>
   </div>
 </template>
 
