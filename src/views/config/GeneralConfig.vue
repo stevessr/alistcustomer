@@ -21,9 +21,15 @@ const message = useMessage();
 const notification = useNotification();
 const loading = ref(false);
 const saving = ref(false);
-const props = defineProps<{
+const props = withDefaults(defineProps<{
   config: Config;
-}>();
+}>(), {
+  config: () => ({
+    force: false,
+    site_url: '',
+    cdn: ''
+  })
+});
 
 const handleReset = async () => {
   try {
@@ -35,14 +41,14 @@ const handleReset = async () => {
     props.config.cdn = '';
     
     notification.success({
-      content: 'Reset successful',
-      meta: 'All general settings have been reset to defaults',
+      content: '重置成功',
+      meta: '所有常规设置已重置为默认值',
       duration: 3000
     });
   } catch (error) {
     notification.error({
-      content: 'Reset failed',
-      meta: 'An error occurred while resetting settings',
+      content: '重置失败',
+      meta: '重置设置时发生错误',
       duration: 5000
     });
     console.error('Reset error:', error);
@@ -57,14 +63,14 @@ const handleSave = async () => {
     await new Promise((resolve) => setTimeout(resolve, 1000));
     
     notification.success({
-      content: 'Save successful',
-      meta: 'General settings have been saved',
+      content: '保存成功',
+      meta: '常规设置已保存',
       duration: 3000
     });
   } catch (error) {
     notification.error({
-      content: 'Save failed',
-      meta: 'An error occurred while saving settings',
+      content: '保存失败',
+      meta: '保存设置时发生错误',
       duration: 5000
     });
     console.error('Save error:', error);
@@ -76,7 +82,7 @@ const handleSave = async () => {
 
 <template>
   <div class="config-section">
-    <h2>General Configuration</h2>
+    <h2>常规配置</h2>
     
     <n-form
       label-placement="left"
@@ -84,24 +90,23 @@ const handleSave = async () => {
       :show-feedback="true"
     >
       <n-form-item 
-        label="Force Mode" 
+        label="强制模式" 
         path="force"
-        :feedback="'Enable to force certain operations'"
+        :feedback="'启用以强制某些操作'"
       >
         <n-switch v-model:value="config.force" />
       </n-form-item>
 
       <n-form-item 
-        label="Site URL" 
+        label="站点URL" 
         path="site_url"
         :rule="{
           type: 'url',
-          message: 'Please enter a valid URL starting with http:// or https://',
+          message: '请输入以http://或https://开头的有效URL',
           trigger: ['input', 'blur'],
           required: true,
           validator: (rule: unknown, value: string) => {
             if (!value) return false;
-            // Simple regex pattern for http/https URLs
             const pattern = /^https?:\/\/(www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_\+.~#?&//=]*)$/;
             return pattern.test(value);
           }
@@ -127,7 +132,7 @@ const handleSave = async () => {
         path="cdn"
         :rule="{
           type: 'url',
-          message: 'Please enter a valid URL starting with http:// or https://',
+          message: '请输入以http://或https://开头的有效URL',
           trigger: ['input', 'blur']
         }"
       >
@@ -146,7 +151,7 @@ const handleSave = async () => {
             :loading="saving"
             @click="handleSave"
           >
-            Save Changes
+            保存更改
           </n-button>
           <n-button
             secondary
@@ -154,7 +159,7 @@ const handleSave = async () => {
             :loading="loading"
             @click="handleReset"
           >
-            Reset to Defaults
+            重置为默认值
           </n-button>
         </n-space>
       </n-form-item>

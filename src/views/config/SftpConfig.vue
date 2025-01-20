@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref } from 'vue';
+import { ref, computed } from 'vue';
 import { 
   NForm, 
   NFormItem, 
@@ -10,19 +10,44 @@ import {
 } from 'naive-ui';
 
 interface SftpConfig {
-  enable: boolean;
-  listen: string;
+  enable?: boolean;
+  listen?: string;
 }
 
 interface Config {
-  sftp: SftpConfig;
+  sftp?: SftpConfig;
 }
 
 const message = useMessage();
 const loading = ref(false);
-const props = defineProps<{
-  config: Config;
-}>();
+const props = withDefaults(defineProps<{
+  config?: Config;
+}>(), {
+  config: () => ({
+    sftp: {
+      enable: false,
+      listen: '127.0.0.1:22'
+    }
+  })
+});
+
+const sftpEnabled = computed({
+  get: () => props.config?.sftp?.enable ?? false,
+  set: (val: boolean) => {
+    if (props.config?.sftp) {
+      props.config.sftp.enable = val;
+    }
+  }
+});
+
+const sftpListenAddress = computed({
+  get: () => props.config?.sftp?.listen ?? '127.0.0.1:22',
+  set: (val: string) => {
+    if (props.config?.sftp) {
+      props.config.sftp.listen = val;
+    }
+  }
+});
 
 const handleReset = async () => {
   try {
@@ -31,12 +56,12 @@ const handleReset = async () => {
     await new Promise((resolve) => setTimeout(resolve, 1000));
     
     // Reset values
-    props.config.sftp.enable = false;
-    props.config.sftp.listen = '127.0.0.1:22';
+    props.config!.sftp!.enable = false;
+    props.config!.sftp!.listen = '127.0.0.1:22';
     
-    message.success('SFTP settings reset to defaults');
+    message.success('SFTP设置已重置为默认值');
   } catch (error) {
-    message.error('Failed to reset SFTP settings');
+    message.error('重置SFTP设置失败');
     console.error('Reset error:', error);
   } finally {
     loading.value = false;
@@ -46,7 +71,7 @@ const handleReset = async () => {
 
 <template>
   <div class="config-section">
-    <h2>SFTP Configuration</h2>
+    <h2>SFTP配置</h2>
     
     <n-form
       label-placement="left"
@@ -54,30 +79,30 @@ const handleReset = async () => {
       :show-feedback="true"
     >
       <n-form-item 
-        label="Enable SFTP" 
+        label="启用SFTP" 
         path="sftpEnable"
-        :feedback="'Enable or disable SFTP file transfer service'"
+        :feedback="'启用或禁用SFTP文件传输服务'"
       >
         <n-switch
-          v-model:value="config.sftp.enable"
+          v-model:value="sftpEnabled"
           size="medium"
           :loading="loading"
         />
       </n-form-item>
 
       <n-form-item 
-        label="Listen Address" 
+        label="监听地址" 
         path="sftpListen"
-        :feedback="'Format: IP:Port (e.g. 127.0.0.1:22)'"
+        :feedback="'格式: IP:端口 (例如 127.0.0.1:22)'"
         :rule="{
           pattern: /^([0-9]{1,3}\.){3}[0-9]{1,3}:[0-9]{1,5}$/,
-          message: 'Must be in format IP:Port (e.g. 127.0.0.1:22)',
+          message: '必须为IP:端口格式 (例如 127.0.0.1:22)',
           required: true,
           trigger: ['input', 'blur']
         }"
       >
         <n-input
-          v-model:value="config.sftp.listen"
+          v-model:value="sftpListenAddress"
           placeholder="127.0.0.1:22"
           clearable
           :loading="loading"
@@ -90,7 +115,7 @@ const handleReset = async () => {
           :loading="loading"
           @click="handleReset"
         >
-          Reset to Defaults
+          重置为默认值
         </n-button>
       </n-form-item>
     </n-form>

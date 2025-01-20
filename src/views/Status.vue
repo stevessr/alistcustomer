@@ -1,17 +1,20 @@
 <script setup lang="ts">
 import { ref } from "vue";
 import { invoke } from "@tauri-apps/api/core";
-import {
-  NDialog,
-  NButton,
-  NCard,
-  NSpace,
-  NInput,
-  NCheckbox,
-  NModal,
-} from "naive-ui";
 import { hide } from "@tauri-apps/api/app";
 import Change_password from "./components/change_password.vue";
+
+declare global {
+  interface Window {
+    $notification?: {
+      error: (options: {
+        content: string;
+        duration: number;
+        keepAliveOnHover: boolean;
+      }) => void;
+    };
+  }
+}
 
 const status = ref<AlistStatus>({ running: false, pid: null });
 const message = ref("");
@@ -89,73 +92,150 @@ async function getAlistVersion() {
 </script>
 
 <template>
-  <div style="text-align: center">
-    <h1>Status Page</h1>
-    <p>这是状态页面</p>
-    <p>当前 alist 是否运行：{{ status.running ? "是" : "否" }}</p>
-    <p>alist 进程 id：{{ status.pid || "无" }}</p>
-    <p>{{ message }}</p>
-    <n-button @click="getAlistStatus">刷新状态</n-button>
-    <n-button @click="startAlist" :disabled="status.running"
-    v-if="!status.running"
-      >启动 alist</n-button
-    >
-    <n-button @click="stopAlist" :disabled="!status.running"
-    v-if="status.running"
-      >停止 alist</n-button
-    >
-    <n-button @click="getAlistVersion">获取 alist 版本信息</n-button>
-    <!-- 新增：获取版本信息按钮 -->
-    <br />
-    <n-button @click="showOptions = true">可选参数</n-button>
-    <!-- 新增：打开可选参数菜单的按钮 -->
-    <n-button @click="downloadAlist" :disabled="status.running" v-if="!status.running">下载 alist</n-button>
-    <Change_password></Change_password>
+  <BaseLayout>
+    <template #header>
+      <h1>Status Page</h1>
+      <p>这是状态页面</p>
+    </template>
+
+    <n-card class="status-card">
+      <n-space vertical>
+        <n-alert :type="status.running ? 'success' : 'error'">
+          当前 alist 状态：{{ status.running ? "运行中" : "已停止" }}
+          <template #icon>
+            <n-icon :name="status.running ? 'checkmark-circle' : 'close-circle'" />
+          </template>
+        </n-alert>
+
+        <n-descriptions label-placement="left" bordered>
+          <n-descriptions-item label="进程 ID">
+            {{ status.pid || "无" }}
+          </n-descriptions-item>
+          <n-descriptions-item label="状态信息">
+            {{ message }}
+          </n-descriptions-item>
+          <n-descriptions-item label="版本信息" v-if="versionInfo">
+            <n-space vertical>
+              <n-tag type="info" size="small">核心版本: {{ versionInfo.version }}</n-tag>
+              <n-tag type="info" size="small">Web版本: {{ versionInfo.web_version }}</n-tag>
+              <n-tag v-if="versionInfo.build_date" type="info" size="small">
+                构建日期: {{ versionInfo.build_date }}
+              </n-tag>
+              <n-tag v-if="versionInfo.commit_hash" type="info" size="small">
+                Git提交: {{ versionInfo.commit_hash.slice(0, 7) }}
+              </n-tag>
+              <n-tag v-if="versionInfo.platform" type="info" size="small">
+                平台: {{ versionInfo.platform }}
+              </n-tag>
+            </n-space>
+          </n-descriptions-item>
+        </n-descriptions>
+
+        <n-space justify="center">
+          <n-button-group>
+            <n-button @click="getAlistStatus" type="primary">
+              刷新状态
+            </n-button>
+            <n-button 
+              @click="startAlist" 
+              :disabled="status.running"
+              v-if="!status.running"
+              type="success"
+            >
+              启动 alist
+            </n-button>
+            <n-button 
+              @click="stopAlist" 
+              :disabled="!status.running"
+              v-if="status.running"
+              type="error"
+            >
+              停止 alist
+            </n-button>
+          </n-button-group>
+        </n-space>
+
+        <n-space justify="center" class="additional-actions">
+          <n-button @click="getAlistVersion" secondary>
+            刷新版本信息
+          </n-button>
+          <n-button @click="showOptions = true" secondary>
+            可选参数
+          </n-button>
+          <n-button 
+            @click="downloadAlist" 
+            :disabled="status.running" 
+            v-if="!status.running"
+            secondary
+          >
+            下载 alist
+          </n-button>
+        </n-space>
+
+        <Change_password class="change-password" />
+      </n-space>
+    </n-card>
 
     <!-- 可选参数菜单 -->
     <n-modal v-model:show="showOptions" title="可选参数">
       <n-card style="width: 400px">
         <n-space vertical>
           <n-checkbox v-model:checked="useProxy">使用代理</n-checkbox>
-          <!-- 是否使用代理 -->
           <n-input
             v-model="proxyUrl"
             placeholder="请输入代理URL"
             :disabled="!useProxy"
           />
-          <!-- 代理URL输入框 -->
           <n-input
             v-model="proxyUsername"
             placeholder="请输入代理用户名"
             :disabled="!useProxy"
           />
-          <!-- 代理用户名输入框 -->
           <n-input
             v-model="proxyPassword"
             placeholder="请输入代理密码"
             :disabled="!useProxy"
             type="password"
           />
-          <!-- 代理密码输入框 -->
           <div style="text-align: center">
             <n-button @click="showOptions = false">关闭</n-button>
-            <!-- 关闭菜单 -->
             <n-button @click="deleteDataFolder">删除数据文件夹</n-button>
           </div>
         </n-space>
       </n-card>
     </n-modal>
 
-    <!-- 版本信息对话框 -->
-    <n-modal v-model:show="showVersionDialog" title="alist 版本信息">
-      <n-card style="width: 400px">
-        <n-space vertical>
-          <p>版本: {{ versionInfo?.version }}</p>
-          <p>Web版本: {{ versionInfo?.web_version }}</p>
-          <n-button @click="showVersionDialog = false">关闭</n-button>
-          <!-- 关闭对话框 -->
-        </n-space>
-      </n-card>
-    </n-modal>
-  </div>
+  </BaseLayout>
 </template>
+
+<style scoped>
+.status-card {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 2rem;
+}
+
+.additional-actions {
+  margin: 1rem 0;
+}
+
+.change-password {
+  margin-top: 2rem;
+}
+
+@media (max-width: 768px) {
+  .status-card {
+    padding: 1rem;
+  }
+  
+  .n-button-group {
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+  
+  .additional-actions {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+}
+</style>

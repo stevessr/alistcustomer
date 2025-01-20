@@ -1,56 +1,75 @@
 <script setup lang="ts">
-import { defineProps } from 'vue';
+import { defineProps, withDefaults, computed } from 'vue';
 
-defineProps<{
-  config: {
+interface TaskConfig {
+  workers: number;
+  max_retry: number;
+  task_persistant: boolean;
+}
+
+interface Config {
+  tasks: {
+    download: TaskConfig;
+    transfer: TaskConfig;
+    upload: TaskConfig;
+    copy: TaskConfig;
+  };
+}
+
+const props = withDefaults(defineProps<{
+  config?: Config;
+}>(), {
+  config: () => ({
     tasks: {
       download: {
-        workers: number;
-        max_retry: number;
-        task_persistant: boolean;
-      };
+        workers: 0,
+        max_retry: 0,
+        task_persistant: false
+      },
       transfer: {
-        workers: number;
-        max_retry: number;
-        task_persistant: boolean;
-      };
+        workers: 0,
+        max_retry: 0,
+        task_persistant: false
+      },
       upload: {
-        workers: number;
-        max_retry: number;
-        task_persistant: boolean;
-      };
+        workers: 0,
+        max_retry: 0,
+        task_persistant: false
+      },
       copy: {
-        workers: number;
-        max_retry: number;
-        task_persistant: boolean;
-      };
-    };
-  };
-}>();
+        workers: 0,
+        max_retry: 0,
+        task_persistant: false
+      }
+    }
+  })
+});
+
+const downloadConfig = computed(() => props.config?.tasks?.download);
 </script>
 
 <template>
   <div class="config-section">
-    <h2>Task Configuration</h2>
+    <h2>任务配置</h2>
     <n-form>
       <div>
-        <h3>Download</h3>
-        <n-form-item label="Workers:" path="downloadWorkers">
+        <h3>下载</h3>
+      <n-form-item label="工作线程数:" path="downloadWorkers">
           <n-input-number
-            v-model:value="config.tasks.download.workers"
+            v-model:value="downloadConfig.workers"
             :min="0"
           />
         </n-form-item>
 
-        <n-form-item label="Max Retry:" path="downloadMaxRetry">
+        <n-form-item label="最大重试次数:" path="downloadMaxRetry">
           <n-input-number
-            v-model:value="config.tasks.download.max_retry"
+            v-model:value="downloadConfig.max_retry"
             :min="0"
           />
         </n-form-item>
 
-        <n-form-item label="Task Persistant:" path="downloadTaskPersistant">
-          <n-switch v-model:checked="config.tasks.download.task_persistant" />
+        <n-form-item label="任务持久化:" path="downloadTaskPersistant">
+          <n-switch v-model:checked="downloadConfig.task_persistant" />
         </n-form-item>
       </div>
 

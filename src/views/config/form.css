@@ -1,0 +1,27 @@
+.n-form {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.n-form-item {
+  margin-bottom: 20px;
+}
+
+.n-form-item-label {
+  font-weight: 500;
+  margin-bottom: 8px;
+  display: block;
+}
+
+.n-input,
+.n-select,
+.n-checkbox,
+.n-switch {
+  width: 100%;
+  max-width: 480px;
+}
+
+.n-input-number {
+  width: 240px;
+}

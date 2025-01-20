@@ -1,0 +1,84 @@
+@media (max-width: 768px) {
+  .config-container {
+    grid-template-columns: 1fr;
+    padding: 16px;
+  }
+  
+  .config-actions-side {
+    position: static;
+    width: 100%;
+    margin-top: 24px;
+    padding: 16px;
+  }
+  
+  .config-grid {
+    grid-template-columns: 1fr;
+    gap: 16px;
+    padding-right: 0;
+  }
+}
+
+@media (min-width: 769px) and (max-width: 1024px) {
+  .config-grid {
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 20px;
+  }
+}
+
+@media (min-width: 1025px) {
+  .config-grid {
+    grid-template-columns: repeat(auto-fit, minmax(360px, 1fr));
+    gap: 24px;
+  }
+}
+
+@media (max-width: 768px) {
+  .config-container {
+    padding: 24px;
+  }
+  
+  .config-title {
+    font-size: 24px;
+  }
+  
+  .config-section {
+    padding: 20px;
+    min-height: 200px;
+  }
+  
+  .config-section h2 {
+    font-size: 20px;
+  }
+  
+  .n-form {
+    gap: 20px;
+  }
+  
+  .config-actions {
+    flex-direction: column;
+    gap: 12px;
+  }
+}
+
+@media (max-width: 480px) {
+  .config-container {
+    padding: 16px;
+  }
+  
+  .config-title {
+    font-size: 22px;
+  }
+  
+  .config-section {
+    padding: 16px;
+    min-height: 180px;
+  }
+  
+  .config-section h2 {
+    font-size: 18px;
+  }
+  
+  .n-form {
+    gap: 16px;
+  }
+}

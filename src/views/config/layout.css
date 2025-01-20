@@ -1,0 +1,67 @@
+.config-container {
+  max-width: 1600px;
+  margin: 0 auto;
+  padding: 24px;
+  transition: all var(--transition-duration) ease;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 260px;
+  gap: 24px;
+  height: calc(100vh - 48px);
+}
+
+.config-actions-side {
+  position: sticky;
+  top: 24px;
+  width: 260px;
+  height: fit-content;
+  padding: 16px;
+  background: var(--n-color-modal);
+  border-radius: var(--n-border-radius);
+  box-shadow: var(--n-box-shadow);
+}
+
+.config-actions-side .btn {
+  width: 100%;
+  margin-top: 12px;
+  padding: 8px 12px;
+}
+
+.config-grid {
+  display: grid;
+  gap: 24px;
+  grid-template-columns: repeat(auto-fit, minmax(360px, 1fr));
+  margin-bottom: 0;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  height: 100%;
+  padding-bottom: 24px;
+}
+
+.config-grid .config-section {
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.config-grid .config-section.dragging {
+  transform: scale(1.02);
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.15);
+  z-index: 10;
+}
+
+.config-grid .config-section.ghost {
+  opacity: 0.5;
+  transform: scale(0.98);
+}
+
+.config-grid .config-section.chosen {
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+}
+
+.config-layout {
+  display: flex;
+  gap: 32px;
+  height: 100%;
+}
+
+.config-form {
+  height: 100%;
+  overflow: auto;
+}
