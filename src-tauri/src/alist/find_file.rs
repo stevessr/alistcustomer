@@ -1,8 +1,8 @@
 use std::process::Command;
-use std::str;
-use regex::Regex;
+//use std::str;
+//use regex::Regex;
 use std::path::PathBuf;
-use serde::Serialize;
+//use serde::Serialize;
 
 // 自动寻找 alist 可执行文件
 pub fn find_alist() -> Option<PathBuf> {

@@ -1,11 +1,18 @@
+#[allow(unused_imports)]
 use std::fs;
+#[allow(unused_imports)]
 use std::path::PathBuf;
+#[allow(unused_imports)]
 use std::process::{Command, Child};
+#[allow(unused_imports)]
 use std::sync::Mutex;
+#[allow(unused_imports)]
 use serde::Serialize;
 #[allow(unused_imports)]
 use sysinfo::{ProcessExt, System, SystemExt, Pid, PidExt};  // 导入 PidExt
+#[allow(unused_imports)]
 use std::path::Path;
+use crate::alist::share::{AlistState, AlistStatus};
 
 // 获取 alist 状态
 #[tauri::command]

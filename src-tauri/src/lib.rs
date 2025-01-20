@@ -1,4 +1,5 @@
-mod alist;
+// lib.rs
+pub mod alist;
 
 #[tauri::command]
 fn greet(name: &str) -> String {
@@ -13,14 +14,13 @@ pub fn run() {
         .manage(alist::AlistPath(std::sync::Mutex::new(None))) // 管理 AlistPath 状态
         .invoke_handler(tauri::generate_handler![
             greet,
-            alist::start_alist,
-            alist::stop_alist,
-            alist::get_alist_status,
-            alist::delete_data_folder,
-            alist::download_and_extract_alist,
-            alist::get_alist_version,
-            alist::set_alist_password
-
+            crate::alist::status::get_alist_status,
+            crate::alist::start::start_alist,
+            crate::alist::stop::stop_alist,
+            crate::alist::clean::delete_data_folder,
+            crate::alist::download::download_and_extract_alist,
+            crate::alist::get_version::get_alist_version,
+            crate::alist::reset_password::set_alist_password
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

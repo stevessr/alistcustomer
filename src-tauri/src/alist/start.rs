@@ -1,5 +1,11 @@
 use std::process::Command;
+#[allow(unused_imports)]
+use std::fs::{self, Permissions};
+#[allow(unused_imports)]
 use sysinfo::{ProcessExt, System, SystemExt, Pid, PidExt};  // 导入 PidExt
+use crate::alist::share::{AlistState, AlistStatus};
+use crate::alist::find_file::find_alist;
+use crate::alist::find_process::find_existing_alist_process;
 
 // 启动 alist
 #[cfg(unix)]
@@ -7,16 +13,12 @@ use std::os::unix::fs::PermissionsExt;
 
 #[tauri::command]
 pub async fn start_alist(state: tauri::State<'_, AlistState>) -> Result<AlistStatus, String> {
-    let mut alist_process = state.0.lock().unwrap();
-
     // 检查是否已经在运行
-    if let Some(process) = &mut *alist_process {
-        match process.try_wait() {
-            Ok(None) => return Ok(AlistStatus {
-                running: true,
-                pid: Some(process.id()),
-            }),
-            _ => {}
+    if let Ok(Some(process)) = state.with_process(|alist_process| {
+        alist_process.as_mut().map(|p| (p.id(), p.try_wait()))
+    }) {
+        if let Ok(None) = process.1 {
+            return Ok(AlistStatus::new(true, Some(process.0)));
         }
     }
 
@@ -26,6 +28,7 @@ pub async fn start_alist(state: tauri::State<'_, AlistState>) -> Result<AlistSta
 
     // 检查文件权限
     let metadata = fs::metadata(&alist_path).map_err(|e| format!("Failed to get metadata: {}", e))?;
+    #[allow(unused_variables)]
     let permissions = metadata.permissions();
 
     #[cfg(unix)]
@@ -61,11 +64,10 @@ pub async fn start_alist(state: tauri::State<'_, AlistState>) -> Result<AlistSta
         .spawn() {
         Ok(child) => {
             let pid = child.id();
-            *alist_process = Some(child);
-            Ok(AlistStatus {
-                running: true,
-                pid: Some(pid),
-            })
+            state.with_process(|alist_process| {
+                *alist_process = Some(child);
+                Ok(AlistStatus::new(true, Some(pid)))
+            })?
         }
         Err(e) => Err(format!("Failed to start alist: {}", e))
     }

@@ -1,11 +1,12 @@
 use std::fs;
-use std::path::PathBuf;
-use std::process::{Command, Child};
-use std::sync::Mutex;
-use serde::Serialize;
+//use std::path::PathBuf;
+//use std::process::{Command, Child};
+//use std::sync::Mutex;
+//use serde::Serialize;
 #[allow(unused_imports)]
 use sysinfo::{ProcessExt, System, SystemExt, Pid, PidExt};  // 导入 PidExt
-use std::path::Path;
+//use std::path::Path;
+use crate::alist::find_file::find_alist;
 
 
 // 删除 alist 所在目录下的 data 文件夹
