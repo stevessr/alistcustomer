@@ -1,11 +1,18 @@
-declare interface AlistStatus {
+export interface AlistStatus {
   running: boolean;
-  pid: number | null;
+  pid: number | undefined;
 }
 
-declare interface AlistVersionInfo {
+export interface AlistVersionInfo {
   version: string;
   web_version: string;
+  build_date?: string;
+  commit_hash?: string;
+  platform?: string;
+  built_at?: string;
+  go_version?: string;
+  author?: string;
+  commit_id?: string;
 }
 
 declare global {

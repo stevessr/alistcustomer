@@ -21,18 +21,27 @@ pub async fn get_alist_version() -> Result<AlistVersionInfo, String> {
     let alist_path = find_alist().ok_or_else(|| "Failed to find alist executable".to_string())?;
 
     // 执行 alist version 命令
-    let output = Command::new(alist_path)
+    let output = Command::new(&alist_path)
         .arg("version")
         .output()
-        .map_err(|e| format!("Failed to execute alist version: {}", e))?;
+        .map_err(|e| format!("Failed to execute alist version at {}: {}", alist_path.display(), e))?;
 
     if !output.status.success() {
-        return Err("Failed to get alist version".to_string());
+        let stderr = str::from_utf8(&output.stderr).unwrap_or("Failed to read stderr");
+        return Err(format!(
+            "Failed to get alist version: {}\nCommand output: {}",
+            output.status,
+            stderr
+        ));
     }
 
     // 将输出转换为字符串
     let output_str = str::from_utf8(&output.stdout)
-        .map_err(|e| format!("Failed to convert output to string: {}", e))?;
+        .map_err(|e| format!(
+            "Failed to convert output to string: {}\nRaw output: {:?}",
+            e,
+            output.stdout
+        ))?;
 
     // 使用正则表达式解析输出
     let re = Regex::new(r"Built At: (?P<built_at>.+)\nGo Version: (?P<go_version>.+)\nAuthor: (?P<author>.+)\nCommit ID: (?P<commit_id>.+)\nVersion: (?P<version>.+)\nWebVersion: (?P<web_version>.+)")

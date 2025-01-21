@@ -1,130 +1,204 @@
 <script setup lang="ts">
-import { ref } from "vue";
+import { onMounted, onUnmounted, ref } from "vue";
 import { invoke } from "@tauri-apps/api/core";
-import { hide } from "@tauri-apps/api/app";
+import { Store } from "@tauri-apps/plugin-store";
+import BaseLayout from "./components/BaseLayout.vue";
 import Change_password from "./components/change_password.vue";
+import { useStatus } from "./status/status";
+import type { AlistStatus, AlistVersionInfo } from "@/types/alist";
 
-declare global {
-  interface Window {
-    $notification?: {
-      error: (options: {
-        content: string;
-        duration: number;
-        keepAliveOnHover: boolean;
-      }) => void;
-    };
-  }
+const { 
+  status, 
+  message, 
+  loading,
+  showOptions, 
+  showVersionDialog, 
+  versionInfo,
+  useProxy,
+  proxyUrl,
+  proxyUsername,
+  proxyPassword
+} = useStatus();
+
+interface AlistApi {
+  startPolling: () => void;
+  stopPolling: () => void;
+  getAlistStatus: () => Promise<void>;
+  startAlist: () => Promise<void>;
+  stopAlist: () => Promise<void>;
+  downloadAlist: () => Promise<void>;
+  getAlistVersion: () => Promise<void>;
+  deleteDataFolder: () => Promise<void>;
 }
 
-const status = ref<AlistStatus>({ running: false, pid: null });
-const message = ref("");
-const loading = ref(false);
-const error = ref(false);
-const pollInterval = ref(2000); // 2 seconds
-let pollTimer: number | null = null;
+const api = ref<Awaited<ReturnType<typeof useAlistApi>>>();
 
-// Start polling when component mounts
-onMounted(() => {
-  startPolling();
-});
+async function useAlistApi(): Promise<{
+  startPolling: () => void;
+  stopPolling: () => void;
+  getAlistStatus: () => Promise<void>;
+  startAlist: () => Promise<void>;
+  stopAlist: () => Promise<void>;
+  downloadAlist: () => Promise<void>;
+  getAlistVersion: () => Promise<void>;
+  deleteDataFolder: () => Promise<void>;
+}> {
+  const alistStatusStore = await Store.load("alist-status.store");
+  const {
+    status,
+    message,
+    proxyUrl,
+    proxyUsername,
+    proxyPassword,
+    useProxy,
+    versionInfo
+  } = useStatus();
 
-// Stop polling when component unmounts
-onUnmounted(() => {
-  stopPolling();
-});
+  let pollTimer: number | null = null;
 
-function startPolling() {
-  stopPolling(); // Clear any existing timer
-  pollTimer = window.setInterval(() => {
-    getAlistStatus();
-  }, pollInterval.value);
-}
-
-function stopPolling() {
-  if (pollTimer !== null) {
-    window.clearInterval(pollTimer);
-    pollTimer = null;
-  }
-}
-
-function setPollInterval(interval: number) {
-  pollInterval.value = interval;
-  if (pollTimer !== null) {
+  function startPolling() {
     stopPolling();
-    startPolling();
+    pollTimer = window.setInterval(() => {
+      getAlistStatus();
+    }, 2000);
   }
-}
-const proxyUrl = ref(""); // 用于存储用户输入的代理URL
-const proxyUsername = ref(""); // 用于存储代理用户名
-const proxyPassword = ref(""); // 用于存储代理密码
-const showOptions = ref(false); // 控制可选参数菜单的显示
-const useProxy = ref(false); // 控制是否使用代理
-const showVersionDialog = ref(false); // 控制版本信息对话框的显示
-const versionInfo = ref<AlistVersionInfo | null>(null); // 存储版本信息
 
-async function deleteDataFolder() {
-  try {
-    await invoke("delete_data_folder");
-    console.log("Data folder deleted successfully");
-  } catch (error) {
-    console.error("Failed to delete data folder:", error);
+  function stopPolling() {
+    if (pollTimer !== null) {
+      window.clearInterval(pollTimer);
+      pollTimer = null;
+    }
   }
+
+  async function getAlistStatus() {
+    try {
+      loading.status.value = true;
+      await invoke("manage_alist_state");
+      
+      const statusResult = await invoke<AlistStatus>("get_alist_status");
+      if (!statusResult) {
+        throw new Error("Failed to get alist status");
+      }
+      await alistStatusStore.set("status", statusResult);
+      const storedStatus = await alistStatusStore.get<AlistStatus>("status");
+      if (storedStatus) {
+        status.value = {
+          running: storedStatus.running,
+          pid: storedStatus.pid
+        };
+      }
+      message.value = "状态获取成功！";
+    } catch (error) {
+      message.value = `获取状态失败：${error}`;
+    } finally {
+      loading.status.value = false;
+    }
+  }
+
+  async function startAlist() {
+    try {
+      loading.start.value = true;
+      status.value = await invoke("start_alist");
+      message.value = "alist 启动成功！";
+    } catch (error) {
+      message.value = `启动失败：${error}`;
+    } finally {
+      loading.start.value = false;
+    }
+  }
+
+  async function stopAlist() {
+    try {
+      loading.stop.value = true;
+      status.value = await invoke("stop_alist");
+      message.value = "alist 已停止！";
+    } catch (error) {
+      message.value = `停止失败：${error}`;
+    } finally {
+      loading.stop.value = false;
+    }
+  }
+
+  async function downloadAlist() {
+    try {
+      loading.download.value = true;
+      const options = {
+        proxyUrl: useProxy.value ? proxyUrl.value : null,
+        proxyUsername: useProxy.value ? proxyUsername.value : null,
+        proxyPassword: useProxy.value ? proxyPassword.value : null,
+      };
+      await invoke("download_and_extract_alist", options);
+      message.value = "alist 下载并解压成功！";
+    } catch (error) {
+      message.value = `下载并解压失败：${error}`;
+    } finally {
+      loading.download.value = false;
+    }
+  }
+
+  async function getAlistVersion() {
+    try {
+      loading.version.value = true;
+      const versionData = await invoke<AlistVersionInfo>("get_alist_version");
+      versionInfo.value = {
+        version: versionData.version,
+        web_version: versionData.web_version,
+        build_date: versionData.built_at,
+        commit_hash: versionData.commit_id,
+        platform: versionData.go_version?.includes('linux') ? 'Linux' : 
+                 versionData.go_version?.includes('windows') ? 'Windows' : 
+                 versionData.go_version?.includes('darwin') ? 'macOS' : undefined,
+        built_at: versionData.built_at,
+        go_version: versionData.go_version,
+        author: versionData.author,
+        commit_id: versionData.commit_id
+      };
+      showVersionDialog.value = true;
+    } catch (error) {
+      message.value = `获取版本信息失败：${error}`;
+      window.$notification?.error({
+        content: `获取版本信息失败：${error}`,
+        duration: 5000,
+        keepAliveOnHover: true,
+      });
+    } finally {
+      loading.version.value = false;
+    }
+  }
+
+  async function deleteDataFolder() {
+    try {
+      await invoke("delete_data_folder");
+      console.log("Data folder deleted successfully");
+    } catch (error) {
+      console.error("Failed to delete data folder:", error);
+    }
+  }
+
+  return {
+    startPolling,
+    stopPolling,
+    getAlistStatus,
+    startAlist,
+    stopAlist,
+    downloadAlist,
+    getAlistVersion,
+    deleteDataFolder
+  };
 }
 
-async function getAlistStatus() {
+onMounted(async () => {
   try {
-    status.value = await invoke("get_alist_status");
-    message.value = "状态获取成功！";
+    api.value = await useAlistApi();
+    api.value?.startPolling();
   } catch (error) {
-    message.value = `获取状态失败：${error}`;
+    console.error('Failed to initialize API:', error);
   }
-}
+});
 
-async function startAlist() {
-  try {
-    status.value = await invoke("start_alist");
-    message.value = "alist 启动成功！";
-  } catch (error) {
-    message.value = `启动失败：${error}`;
-  }
-}
-
-async function stopAlist() {
-  try {
-    status.value = await invoke("stop_alist");
-    message.value = "alist 已停止！";
-  } catch (error) {
-    message.value = `停止失败：${error}`;
-  }
-}
-
-async function downloadAlist() {
-  try {
-    const options = {
-      proxyUrl: useProxy.value ? proxyUrl.value : null, // 根据是否使用代理传递URL
-      proxyUsername: useProxy.value ? proxyUsername.value : null, // 传递代理用户名
-      proxyPassword: useProxy.value ? proxyPassword.value : null, // 传递代理密码
-    };
-    await invoke("download_and_extract_alist", options); // 传递可选参数
-    message.value = "alist 下载并解压成功！";
-  } catch (error) {
-    message.value = `下载并解压失败：${error}`;
-  }
-}
-
-async function getAlistVersion() {
-  try {
-    versionInfo.value = await invoke<AlistVersionInfo>("get_alist_version");
-    showVersionDialog.value = true; // 显示版本信息对话框
-  } catch (error) {
-    message.value = `获取版本信息失败：${error}`;
-    window.$notification?.error({
-      content: `获取版本信息失败：${error}`,
-      duration: 5000,
-      keepAliveOnHover: true,
-    });
-  }
-}
+onUnmounted(() => {
+  api.value?.stopPolling();
+});
 </script>
 
 <template>
@@ -169,20 +243,26 @@ async function getAlistVersion() {
 
         <n-space justify="center">
           <n-button-group>
-            <n-button @click="getAlistStatus" type="primary">
+            <n-button 
+              @click="async () => await api?.getAlistStatus()" 
+              type="primary" 
+              :loading="loading.status.value"
+            >
               刷新状态
             </n-button>
             <n-button 
-              @click="startAlist" 
-              :disabled="status.running"
+              @click="async () => await api?.startAlist()"
+              :disabled="status.running || loading.start.value"
+              :loading="loading.start.value"
               v-if="!status.running"
               type="success"
             >
               启动 alist
             </n-button>
             <n-button 
-              @click="stopAlist" 
-              :disabled="!status.running"
+              @click="async () => await api?.stopAlist()"
+              :disabled="!status.running || loading.stop.value"
+              :loading="loading.stop.value"
               v-if="status.running"
               type="error"
             >
@@ -192,15 +272,16 @@ async function getAlistVersion() {
         </n-space>
 
         <n-space justify="center" class="additional-actions">
-          <n-button @click="getAlistVersion" secondary>
-            刷新版本信息
+          <n-button @click="async () => await api?.getAlistVersion()" secondary :loading="loading.version.value">
+            获取版本信息
           </n-button>
           <n-button @click="showOptions = true" secondary>
             可选参数
           </n-button>
           <n-button 
-            @click="downloadAlist" 
-            :disabled="status.running" 
+            @click="async () => await api?.downloadAlist()"
+            :disabled="status.running || loading.download.value"
+            :loading="loading.download.value"
             v-if="!status.running"
             secondary
           >
@@ -235,7 +316,38 @@ async function getAlistVersion() {
           />
           <div style="text-align: center">
             <n-button @click="showOptions = false">关闭</n-button>
-            <n-button @click="deleteDataFolder">删除数据文件夹</n-button>
+            <n-button @click="async () => await api?.deleteDataFolder()">删除数据文件夹</n-button>
+          </div>
+        </n-space>
+      </n-card>
+    </n-modal>
+
+    <!-- 版本信息对话框 -->
+    <n-modal v-model:show="showVersionDialog" title="版本信息">
+      <n-card style="width: 600px">
+        <n-space vertical>
+          <n-descriptions label-placement="left" bordered>
+            <n-descriptions-item label="核心版本">
+              {{ versionInfo?.version || '未知' }}
+            </n-descriptions-item>
+            <n-descriptions-item label="Web版本">
+              {{ versionInfo?.web_version || '未知' }}
+            </n-descriptions-item>
+            <n-descriptions-item label="构建日期">
+              {{ versionInfo?.built_at || '未知' }}
+            </n-descriptions-item>
+            <n-descriptions-item label="Go版本">
+              {{ versionInfo?.go_version || '未知' }}
+            </n-descriptions-item>
+            <n-descriptions-item label="作者">
+              {{ versionInfo?.author || '未知' }}
+            </n-descriptions-item>
+            <n-descriptions-item label="Commit ID">
+              {{ versionInfo?.commit_id || '未知' }}
+            </n-descriptions-item>
+          </n-descriptions>
+          <div style="text-align: center">
+            <n-button @click="showVersionDialog = false">关闭</n-button>
           </div>
         </n-space>
       </n-card>
@@ -245,33 +357,5 @@ async function getAlistVersion() {
 </template>
 
 <style scoped>
-.status-card {
-  max-width: 800px;
-  margin: 0 auto;
-  padding: 2rem;
-}
-
-.additional-actions {
-  margin: 1rem 0;
-}
-
-.change-password {
-  margin-top: 2rem;
-}
-
-@media (max-width: 768px) {
-  .status-card {
-    padding: 1rem;
-  }
-  
-  .n-button-group {
-    flex-wrap: wrap;
-    gap: 0.5rem;
-  }
-  
-  .additional-actions {
-    flex-direction: column;
-    gap: 0.5rem;
-  }
-}
+@import "./status/status.css";
 </style>

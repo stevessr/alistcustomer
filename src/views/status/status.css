@@ -1,0 +1,29 @@
+.status-card {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 2rem;
+}
+
+.additional-actions {
+  margin: 1rem 0;
+}
+
+.change-password {
+  margin-top: 2rem;
+}
+
+@media (max-width: 768px) {
+  .status-card {
+    padding: 1rem;
+  }
+  
+  .n-button-group {
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+  
+  .additional-actions {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+}
