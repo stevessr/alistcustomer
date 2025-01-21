@@ -7,6 +7,9 @@
     "core:default",
     "opener:default",
     "core:window:allow-create",
-    "core:window:allow-close"
+    "core:window:allow-close",
+    "store:allow-delete",
+    "store:allow-get-store",
+    "store:allow-entries"
   ]
 }

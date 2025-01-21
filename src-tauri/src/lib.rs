@@ -10,6 +10,7 @@ fn greet(name: &str) -> String {
 pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_opener::init())
+        .plugin(tauri_plugin_store::Builder::default().build())
         .manage(alist::AlistState(tokio::sync::Mutex::new(None)))
         .manage(alist::AlistPath(tokio::sync::Mutex::new(None::<String>))) // 管理 AlistPath 状态
         .invoke_handler(tauri::generate_handler![
