@@ -31,6 +31,7 @@ const emit = defineEmits(['update:components']);
               class="config-section"
               :data-type="element.id"
               :style="{ borderLeftColor: colors[element.id] }"
+              v-bind="element.props"
             />
           </div>
         </template>

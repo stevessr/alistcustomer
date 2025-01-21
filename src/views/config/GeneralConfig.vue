@@ -19,7 +19,7 @@ const notification = useNotification();
 const loading = ref(false);
 const saving = ref(false);
 const props = withDefaults(defineProps<{
-  config: Config;
+  config?: Config;
 }>(), {
   config: () => ({
     force: false,
@@ -28,14 +28,20 @@ const props = withDefaults(defineProps<{
   })
 });
 
+const localConfig = ref({
+  force: props.config.force,
+  site_url: props.config.site_url,
+  cdn: props.config.cdn
+});
+
 const handleReset = async () => {
   try {
     loading.value = true;
     await new Promise((resolve) => setTimeout(resolve, 1000));
     
-    props.config.force = false;
-    props.config.site_url = '';
-    props.config.cdn = '';
+    localConfig.value.force = false;
+    localConfig.value.site_url = '';
+    localConfig.value.cdn = '';
     
     notification.success({
       content: '重置成功',
@@ -58,6 +64,11 @@ const handleSave = async () => {
   try {
     saving.value = true;
     await new Promise((resolve) => setTimeout(resolve, 1000));
+    
+    // Update parent config
+    props.config.force = localConfig.value.force;
+    props.config.site_url = localConfig.value.site_url;
+    props.config.cdn = localConfig.value.cdn;
     
     notification.success({
       content: '保存成功',
@@ -91,7 +102,7 @@ const handleSave = async () => {
         path="force"
         :feedback="'启用以强制某些操作'"
       >
-        <n-switch v-model:value="config.force" />
+        <n-switch v-model:value="localConfig.force" />
       </n-form-item>
 
       <n-form-item 
@@ -110,11 +121,11 @@ const handleSave = async () => {
         }"
       >
         <n-input
-          v-model:value="config.site_url"
+          v-model:value="localConfig.site_url"
           placeholder="https://example.com"
           clearable
           :loading="loading"
-          :status="config.site_url ? 'success' : 'warning'"
+          :status="localConfig.site_url ? 'success' : 'warning'"
         >
           <template #prefix>
             <n-icon>
@@ -134,7 +145,7 @@ const handleSave = async () => {
         }"
       >
         <n-input
-          v-model:value="config.cdn"
+          v-model:value="localConfig.cdn"
           placeholder="https://cdn.example.com"
           clearable
           :loading="loading"

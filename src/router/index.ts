@@ -28,6 +28,11 @@ const routes = [
     name: "config",
     component: () => import("../views/Config.vue"),
   },
+  {
+    path: "/change-password",
+    name: "change-password",
+    component: () => import("../views/ChangePassword.vue"),
+  },
 ];
 
 // 创建路由实例

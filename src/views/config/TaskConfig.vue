@@ -56,20 +56,34 @@ const downloadConfig = computed(() => props.config?.tasks?.download);
         <h3>下载</h3>
       <n-form-item label="工作线程数:" path="downloadWorkers">
           <n-input-number
+            v-if="downloadConfig"
             v-model:value="downloadConfig.workers"
             :min="0"
           />
+          <n-alert v-else type="error">
+            配置加载失败，请刷新页面或联系管理员
+          </n-alert>
         </n-form-item>
 
         <n-form-item label="最大重试次数:" path="downloadMaxRetry">
           <n-input-number
+            v-if="downloadConfig"
             v-model:value="downloadConfig.max_retry"
             :min="0"
           />
+          <n-alert v-else type="error">
+            配置加载失败，请刷新页面或联系管理员
+          </n-alert>
         </n-form-item>
 
         <n-form-item label="任务持久化:" path="downloadTaskPersistant">
-          <n-switch v-model:checked="downloadConfig.task_persistant" />
+          <n-switch
+            v-if="downloadConfig"
+            v-model:checked="downloadConfig.task_persistant"
+          />
+          <n-alert v-else type="error">
+            配置加载失败，请刷新页面或联系管理员
+          </n-alert>
         </n-form-item>
       </div>
 

@@ -2,7 +2,6 @@
 import { onMounted, onUnmounted, ref, toRefs } from "vue";
 import { invoke } from "@tauri-apps/api/core";
 import BaseLayout from "./components/BaseLayout.vue";
-import Change_password from "./components/change_password.vue";
 import StatusCard from "./components/StatusCard.vue";
 import { useStatus } from "./status/status";
 import { useAlistApi } from "../composables/useAlistApi";
@@ -40,7 +39,8 @@ onUnmounted(() => {
       <p>这是状态页面</p>
     </template>
 
-      <StatusCard
+    <StatusCard
+      :class="{ 'status-card': true, 'loading': loading }"
       :status="status"
       :message="message"
       :version-info="versionInfo"
@@ -54,6 +54,8 @@ onUnmounted(() => {
         showVersionDialog = true;
       }"
       :show-version-dialog="showVersionDialog"
+      aria-live="polite"
+      aria-busy="loading"
     />
 
     <n-button @click="showOptions = true" secondary>

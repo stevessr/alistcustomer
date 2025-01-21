@@ -4,6 +4,7 @@
     <n-form>
       <n-form-item label="数据库类型:" path="dbType">
         <n-select
+          v-if="config?.database"
           v-model:value="config.database.type"
           :options="[
             { label: 'MySQL', value: 'mysql' },
@@ -11,9 +12,12 @@
             { label: 'SQLite', value: 'sqlite' }
           ]"
         />
+        <n-alert v-else type="error">
+          配置加载失败，请刷新页面或联系管理员
+        </n-alert>
       </n-form-item>
 
-      <template v-if="config.database.type !== 'sqlite'">
+      <template v-if="config?.database && config.database.type !== 'sqlite'">
         <n-form-item label="主机:" path="dbHost">
           <n-input
             v-model:value="config.database.host"
@@ -58,12 +62,16 @@
 
       <n-form-item label="数据库名称:" path="dbName">
         <n-input
+          v-if="config?.database"
           v-model:value="config.database.name"
           placeholder="数据库名称"
         />
+        <n-alert v-else type="error">
+          配置加载失败，请刷新页面或联系管理员
+        </n-alert>
       </n-form-item>
 
-      <template v-if="config.database.type === 'sqlite'">
+      <template v-if="config?.database && config.database.type === 'sqlite'">
         <n-form-item label="数据库文件:" path="dbFile">
           <n-input
             v-model:value="config.database.dbFile"
@@ -74,12 +82,16 @@
 
       <n-form-item label="表前缀:" path="tablePrefix">
         <n-input
+          v-if="config?.database"
           v-model:value="config.database.tablePrefix"
           placeholder="可选表前缀"
         />
+        <n-alert v-else type="error">
+          配置加载失败，请刷新页面或联系管理员
+        </n-alert>
       </n-form-item>
 
-      <template v-if="config.database.type !== 'sqlite'">
+      <template v-if="config?.database && config.database.type !== 'sqlite'">
         <n-form-item label="SSL模式:" path="sslMode">
           <n-select
             v-model:value="config.database.sslMode"
