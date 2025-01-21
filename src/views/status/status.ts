@@ -1,16 +1,10 @@
-import { ref } from "vue";
-import type { AlistStatus, AlistVersionInfo } from "@/types/alist";
+import { ref, reactive } from "vue";
+import type { AlistStatus, AlistVersionInfo } from "../../types/alist";
 
 export const useStatus = () => {
   const status = ref<AlistStatus>({ running: false, pid: undefined });
   const message = ref("");
-  const loading = {
-    status: ref(false),
-    start: ref(false),
-    stop: ref(false),
-    download: ref(false),
-    version: ref(false)
-  };
+  const loading = ref(false);
   const error = ref(false);
   const pollInterval = ref(2000);
   const proxyUrl = ref("");
@@ -21,10 +15,10 @@ export const useStatus = () => {
   const showVersionDialog = ref(false);
   const versionInfo = ref<AlistVersionInfo | null>(null);
 
-  return {
+  return reactive({
     status,
     message,
-    loading,
+    loading: loading,
     error,
     pollInterval,
     proxyUrl,
@@ -34,5 +28,5 @@ export const useStatus = () => {
     useProxy,
     showVersionDialog,
     versionInfo
-  };
+  });
 };

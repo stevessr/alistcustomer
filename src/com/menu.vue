@@ -155,7 +155,7 @@ const menuOptions: MenuOption[] = [
             key: "tester",
             icon: renderIcon(PersonIcon),
             onclick: () => {
-              isModalOpen.value = true;
+              // Modal functionality removed
             },
           },
         ],

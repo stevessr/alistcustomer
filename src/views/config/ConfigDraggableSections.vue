@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import draggable from 'vuedraggable';
-import { ref } from 'vue';
 
 interface ConfigComponent {
   id: string;

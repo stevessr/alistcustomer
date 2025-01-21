@@ -44,11 +44,27 @@ pub async fn get_alist_version() -> Result<AlistVersionInfo, String> {
         ))?;
 
     // 使用正则表达式解析输出
-    let re = Regex::new(r"Built At: (?P<built_at>.+)\nGo Version: (?P<go_version>.+)\nAuthor: (?P<author>.+)\nCommit ID: (?P<commit_id>.+)\nVersion: (?P<version>.+)\nWebVersion: (?P<web_version>.+)")
+    // 更健壮的正则表达式，允许字段间有空行和其他内容
+    let re = Regex::new(r"(?x)
+        Built\s*At:\s*(?P<built_at>[^\n]+)
+        .*?
+        Go\s*Version:\s*(?P<go_version>[^\n]+)
+        .*?
+        Author:\s*(?P<author>[^\n]+)
+        .*?
+        Commit\s*ID:\s*(?P<commit_id>[^\n]+)
+        .*?
+        Version:\s*(?P<version>[^\n]+)
+        .*?
+        WebVersion:\s*(?P<web_version>[^\n]+)")
         .map_err(|e| format!("Failed to compile regex: {}", e))?;
 
-    let caps = re.captures(output_str)
-        .ok_or_else(|| "Failed to parse alist version output".to_string())?;
+    let caps = re.captures(output_str).ok_or_else(|| {
+        format!(
+            "Failed to parse alist version output. Actual output:\n{}",
+            output_str
+        )
+    })?;
 
     // 提取并返回解析后的信息
     Ok(AlistVersionInfo {

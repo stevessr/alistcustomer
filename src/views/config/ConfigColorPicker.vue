@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { ref } from 'vue';
 import { NCard, NColorPicker } from 'naive-ui';
-import Transition from 'naive-ui';
 
 const showPicker = ref(false);
 
