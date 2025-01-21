@@ -1,4 +1,5 @@
 //use std::process::Child;
+use std::path::Path;
 use tokio::sync::Mutex;
 use log::{error, info};
 use crate::alist::share::{AlistState, AlistStatus, AlistPath};
@@ -69,7 +70,7 @@ async fn check_external_process(
     
     // 现在可以直接使用 as_ref() 因为现在操作的是 Option<String>
     if let Some(path_str) = path.as_ref() {
-        if let Some(pid) = find_existing_alist_process(path_str) {
+        if let Some(pid) = find_existing_alist_process(&Path::new(path_str)) {
             return Ok(Some(AlistStatus {
                 running: true,
                 pid: Some(pid),
