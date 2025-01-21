@@ -30,10 +30,10 @@ pub fn find_alist() -> Option<PathBuf> {
 }
 
 // 初始化 AlistPath 结构体
-pub fn init_alist_path(alist_path: State<'_, AlistPath>) -> Result<(), String> {
+pub async fn init_alist_path(alist_path: State<'_, AlistPath>) -> Result<(), String> {
     if let Some(path) = find_alist() {
         let path_str = path.to_string_lossy().into_owned();
-        *alist_path.0.lock().unwrap() = Some(path_str);
+        alist_path.with_path(|p| *p = Some(path_str)).await?;
         Ok(())
     } else {
         Err("Failed to find alist executable".to_string())

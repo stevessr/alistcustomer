@@ -18,6 +18,42 @@ declare global {
 
 const status = ref<AlistStatus>({ running: false, pid: null });
 const message = ref("");
+const loading = ref(false);
+const error = ref(false);
+const pollInterval = ref(2000); // 2 seconds
+let pollTimer: number | null = null;
+
+// Start polling when component mounts
+onMounted(() => {
+  startPolling();
+});
+
+// Stop polling when component unmounts
+onUnmounted(() => {
+  stopPolling();
+});
+
+function startPolling() {
+  stopPolling(); // Clear any existing timer
+  pollTimer = window.setInterval(() => {
+    getAlistStatus();
+  }, pollInterval.value);
+}
+
+function stopPolling() {
+  if (pollTimer !== null) {
+    window.clearInterval(pollTimer);
+    pollTimer = null;
+  }
+}
+
+function setPollInterval(interval: number) {
+  pollInterval.value = interval;
+  if (pollTimer !== null) {
+    stopPolling();
+    startPolling();
+  }
+}
 const proxyUrl = ref(""); // 用于存储用户输入的代理URL
 const proxyUsername = ref(""); // 用于存储代理用户名
 const proxyPassword = ref(""); // 用于存储代理密码

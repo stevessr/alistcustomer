@@ -1,55 +1,81 @@
-#[allow(unused_imports)]
-use std::fs;
-#[allow(unused_imports)]
-use std::path::PathBuf;
-#[allow(unused_imports)]
-use std::process::{Command, Child};
-#[allow(unused_imports)]
-use std::sync::Mutex;
-#[allow(unused_imports)]
-use serde::Serialize;
-#[allow(unused_imports)]
-use sysinfo::{ProcessExt, System, SystemExt, Pid, PidExt};  // 导入 PidExt
-#[allow(unused_imports)]
-use std::path::Path;
-use crate::alist::share::{AlistState, AlistStatus};
+//use std::process::Child;
+use tokio::sync::Mutex;
+use log::{error, info};
+use crate::alist::share::{AlistState, AlistStatus, AlistPath};
 use crate::alist::find_process::find_existing_alist_process;
 
-// 获取 alist 状态
 #[tauri::command]
-pub async fn get_alist_status(state: tauri::State<'_, AlistState>) -> Result<AlistStatus, String> {
-    let mut alist_process = state.0.lock().unwrap();
+pub async fn get_alist_status(
+    state: tauri::State<'_, Mutex<AlistState>>,
+    alist_path: tauri::State<'_, Mutex<AlistPath>>
+) -> Result<AlistStatus, String> {
+    check_alist_status(&state, &alist_path).await
+}
 
-    // 优先检查系统中是否已经存在 alist 进程
-    if let Some(existing_pid) = find_existing_alist_process(&Path::new("/path/to/alist")) {
-        // 如果找到已存在的进程，更新 AlistState 中的信息
-        *alist_process = Some(Command::new("/path/to/alist").spawn().map_err(|e| {
-            format!("Failed to spawn alist process: {}", e)
-        })?);
-        return Ok(AlistStatus {
-            running: true,
-            pid: Some(existing_pid),
-        });
+async fn check_alist_status(
+    state: &tauri::State<'_, Mutex<AlistState>>,
+    alist_path: &tauri::State<'_, Mutex<AlistPath>>
+) -> Result<AlistStatus, String> {
+    // Check managed process status
+    let managed_status = check_managed_process(state).await?;
+    if let Some(status) = managed_status {
+        info!("Found running managed process with PID: {:?}", status.pid);
+        return Ok(status);
     }
-    
 
-    // 如果没有找到已存在的进程，检查 AlistState 中的进程
-    if let Some(process) = &mut *alist_process {
+    // Check for external process if no managed process found
+    let external_status = check_external_process(alist_path).await?;
+    if let Some(status) = external_status {
+        info!("Found external process with PID: {:?}", status.pid);
+        return Ok(status);
+    }
+
+    info!("No running AList processes found");
+    Ok(AlistStatus {
+        running: false,
+        pid: None,
+    })
+}
+
+async fn check_managed_process(
+    state: &tauri::State<'_, Mutex<AlistState>>
+) -> Result<Option<AlistStatus>, String> {
+    let state = state.lock().await;
+    let mut process = state.0.lock().await;
+    
+    if let Some(process) = &mut *process {
         match process.try_wait() {
-            Ok(None) => Ok(AlistStatus {
+            Ok(None) => Ok(Some(AlistStatus {
                 running: true,
                 pid: Some(process.id()),
-            }),
-            Ok(Some(_)) => Ok(AlistStatus {
-                running: false,
-                pid: None,
-            }),
-            Err(e) => Err(format!("Failed to check alist status: {}", e)),
+            })),
+            Ok(Some(_)) => Ok(None),
+            Err(e) => {
+                error!("Failed to check managed process status: {}", e);
+                Err(format!("Failed to check managed process status: {}", e))
+            }
         }
     } else {
-        Ok(AlistStatus {
-            running: false,
-            pid: None,
-        })
+        Ok(None)
     }
+}
+
+async fn check_external_process(
+    alist_path: &tauri::State<'_, Mutex<AlistPath>>
+) -> Result<Option<AlistStatus>, String> {
+    let guard = alist_path.lock().await;
+    // 直接访问内部的 Option<String>
+    let path = guard.0.lock().await;
+    
+    // 现在可以直接使用 as_ref() 因为现在操作的是 Option<String>
+    if let Some(path_str) = path.as_ref() {
+        if let Some(pid) = find_existing_alist_process(path_str) {
+            return Ok(Some(AlistStatus {
+                running: true,
+                pid: Some(pid),
+            }));
+        }
+    }
+    
+    Ok(None)
 }

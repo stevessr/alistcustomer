@@ -41,6 +41,8 @@ dependencies = [
 name = "alistcustomer"
 version = "0.1.0"
 dependencies = [
+ "lazy_static",
+ "log",
  "regex",
  "reqwest 0.11.27",
  "serde",

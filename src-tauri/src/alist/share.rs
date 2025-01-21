@@ -1,5 +1,5 @@
 use std::process::Child;
-use std::sync::Mutex;
+use tokio::sync::Mutex;
 use serde::Serialize;
 
 
@@ -21,27 +21,25 @@ pub struct AlistState(pub Mutex<Option<Child>>);
 
 impl AlistState {
     /// Safely access the process state
-    pub fn with_process<F, R>(&self, f: F) -> Result<R, String>
+    pub async fn with_process<F, R>(&self, f: F) -> Result<R, String>
     where
         F: FnOnce(&mut Option<Child>) -> R,
     {
-        self.0.lock()
-            .map_err(|e| format!("Failed to lock process state: {}", e))
-            .map(|mut guard| f(&mut *guard))
+        let mut guard = self.0.lock().await;
+        Ok(f(&mut *guard))
     }
 }
 
 /// Wrapper for managing the alist executable path
-pub struct AlistPath(pub std::sync::Mutex<Option<String>>);
+pub struct AlistPath(pub Mutex<Option<String>>);
 
 impl AlistPath {
     /// Safely access the path
-    pub fn with_path<F, R>(&self, f: F) -> Result<R, String>
+    pub async fn with_path<F, R>(&self, f: F) -> Result<R, String>
     where
         F: FnOnce(&mut Option<String>) -> R,
     {
-        self.0.lock()
-            .map_err(|e| format!("Failed to lock path state: {}", e))
-            .map(|mut guard| f(&mut *guard))
+        let mut guard = self.0.lock().await;
+        Ok(f(&mut *guard))
     }
 }
