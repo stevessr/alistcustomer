@@ -6,8 +6,6 @@ import {
   NInput,
   NSwitch,
   NButton,
-  NSpin,
-  useMessage,
   useNotification
 } from 'naive-ui';
 
@@ -17,7 +15,6 @@ interface Config {
   cdn: string;
 }
 
-const message = useMessage();
 const notification = useNotification();
 const loading = ref(false);
 const saving = ref(false);
@@ -105,7 +102,7 @@ const handleSave = async () => {
           message: '请输入以http://或https://开头的有效URL',
           trigger: ['input', 'blur'],
           required: true,
-          validator: (rule: unknown, value: string) => {
+          validator: (_rule: unknown, value: string) => {
             if (!value) return false;
             const pattern = /^https?:\/\/(www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_\+.~#?&//=]*)$/;
             return pattern.test(value);

@@ -1,4 +1,4 @@
-# Logs
+src-tauri/data/
 logs
 *.log
 npm-debug.log*
