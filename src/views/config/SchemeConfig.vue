@@ -118,7 +118,7 @@ const unixFilePerm = computed({
       </n-form-item>
 
       <n-form-item label="Force HTTPS:" path="schemeForceHttps">
-        <n-checkbox v-model:checked="forceHttps" />
+        <n-switch v-model:checked="forceHttps" />
       </n-form-item>
 
       <n-form-item label="Cert File:" path="schemeCertFile">

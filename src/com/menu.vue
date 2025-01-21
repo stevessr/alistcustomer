@@ -124,6 +124,24 @@ const menuOptions: MenuOption[] = [
   {
     label: () =>
       h(
+        "a",
+        {
+          href: "/change-password",
+          target: "_self",
+          rel: "noopenner noreferrer",
+          onClick: () => {
+            console.log("clicked change password");
+          },
+        },
+        "修改密码"
+      ),
+    key: "change-password",
+    icon: renderIcon(PersonIcon),
+    disabled: false,
+  },
+  {
+    label: () =>
+      h(
         NButton,
         {
           type: "tertiary",

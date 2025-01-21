@@ -31,12 +31,33 @@ const props = withDefaults(defineProps<{
   })
 });
 
-const sftpEnabled = computed({
-  get: () => props.config?.sftp?.enable ?? false,
-  set: (val: boolean) => {
+const handleSftpToggle = async (val: boolean) => {
+  try {
+    loading.value = true;
+    // Simulate async API call to update SFTP config
+    await new Promise((resolve) => setTimeout(resolve, 1000));
+    
     if (props.config?.sftp) {
       props.config.sftp.enable = val;
     }
+    
+    message.success(`SFTP已${val ? '启用' : '禁用'}`);
+  } catch (error) {
+    message.error(`SFTP状态更新失败`);
+    console.error('SFTP toggle error:', error);
+    // Revert the change if failed
+    if (props.config?.sftp) {
+      props.config.sftp.enable = !val;
+    }
+  } finally {
+    loading.value = false;
+  }
+};
+
+const sftpEnabled = computed({
+  get: () => props.config?.sftp?.enable ?? false,
+  set: (val: boolean) => {
+    handleSftpToggle(val);
   }
 });
 

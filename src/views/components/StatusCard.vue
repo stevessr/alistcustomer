@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { ref } from "vue";
-import Change_password from "./change_password.vue";
 
 defineProps<{
   status: {
@@ -108,7 +107,6 @@ const emit = defineEmits<{
         </n-button>
       </n-space>
 
-      <Change_password class="change-password" />
     </n-space>
   </n-card>
 </template>
@@ -122,7 +120,4 @@ const emit = defineEmits<{
   margin-top: 20px;
 }
 
-.change-password {
-  margin-top: 20px;
-}
 </style>

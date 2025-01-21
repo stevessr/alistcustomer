@@ -31,6 +31,11 @@ interface SectionColors {
 
 interface Config {
   section_colors: SectionColors;
+  general?: {
+    force: boolean;
+    site_url: string;
+    cdn: string;
+  };
   s3: {
     enable: boolean;
     port: number;
@@ -100,7 +105,7 @@ invoke('read_config').then((data: any) => {
 
 // 只保留一个 configComponents 定义
 const configComponents = ref([
-  { id: 'general', component: GeneralConfig, props: { config } },
+  { id: 'general', component: GeneralConfig, props: { config: config.value?.general } },
   { id: 'database', component: DatabaseConfig, props: { config } },
   { id: 'meilisearch', component: MeilisearchConfig, props: { config } },
   { id: 'scheme', component: SchemeConfig, props: { config } },
