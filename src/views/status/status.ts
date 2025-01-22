@@ -1,8 +1,9 @@
 import { ref, reactive } from "vue";
+import type { Ref } from "vue";
 import type { AlistStatus, AlistVersionInfo } from "../../types/alist";
 
-export const useStatus = () => {
-  const status = ref<AlistStatus>({ running: false, pid: undefined });
+export const useStatus = <T extends { running: boolean; pid?: number }>() => {
+  const status = ref<T>({ running: false, pid: undefined } as T);
   const message = ref("");
   const loading = ref(false);
   const error = ref(false);
