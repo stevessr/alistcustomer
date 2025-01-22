@@ -40,6 +40,15 @@ const defaultColors = {
   sftp: '#ffffff'
 };
 
+const generateRandomColor = () => {
+  const randomColors = Object.keys(props.colors).reduce((acc, section) => {
+    acc[section as keyof SectionColors] = `#${Math.floor(Math.random() * 16777215).toString(16).padStart(6, '0')}`;
+    return acc;
+  }, {} as SectionColors);
+  emit('update:colors', randomColors);
+  saveColors();
+};
+
 const resetColors = () => {
   emit('update:colors', { ...defaultColors });
   saveColors();
@@ -63,6 +72,9 @@ const handleColorChange = (section: keyof SectionColors, color: string) => {
       </button>
       <button class="reset-button" @click="resetColors">
         重置颜色
+      </button>
+      <button class="random-button" @click="generateRandomColor">
+        随机颜色
       </button>
     </div>
     
@@ -125,6 +137,15 @@ const handleColorChange = (section: keyof SectionColors, color: string) => {
   border: 1px solid var(--n-border-color);
   background-color: var(--n-color);
   cursor: pointer;
+}
+
+.random-button {
+  background-color: #e3f2fd;
+  color: #1565c0;
+}
+
+.random-button:hover {
+  background-color: #bbdefb;
 }
 
 .reset-button {
