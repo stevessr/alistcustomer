@@ -22,3 +22,7 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+src-tauri/data/*
+src-tauri/data/data.db-wal
+src-tauri/data/data.db-shm
+src-tauri/data/data.db
