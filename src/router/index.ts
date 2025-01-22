@@ -33,6 +33,11 @@ const routes = [
     name: "change-password",
     component: () => import("../views/ChangePassword.vue"),
   },
+  {
+    path: "/download",
+    name: "download",
+    component: () => import("../views/Download.vue"),
+  },
 ];
 
 // 创建路由实例

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { defineProps, withDefaults, computed } from 'vue';
+import { computed, ref } from 'vue';
 
 interface SchemeConfig {
   address: string;
@@ -16,22 +16,20 @@ interface Config {
   scheme?: SchemeConfig;
 }
 
-const { config } = withDefaults(defineProps<{
+const { config = {
+  scheme: {
+    address: '',
+    http_port: 80,
+    https_port: 443,
+    force_https: false,
+    cert_file: '',
+    key_file: '',
+    unix_file: '',
+    unix_file_perm: ''
+  }
+} } = defineProps<{
   config?: Config;
-}>(), {
-  config: () => ({
-    scheme: {
-      address: '',
-      http_port: 80,
-      https_port: 443,
-      force_https: false,
-      cert_file: '',
-      key_file: '',
-      unix_file: '',
-      unix_file_perm: ''
-    }
-  })
-});
+}>();
 
 const address = computed({
   get: () => config?.scheme?.address ?? '',
@@ -88,16 +86,29 @@ const unixFilePerm = computed({
     if (config?.scheme) config.scheme.unix_file_perm = value;
   }
 });
+
+const isPreview = ref(false);
 </script>
 
 <template>
   <div class="config-section">
-    <h2>Scheme Configuration</h2>
+    <div class="config-header">
+      <h2>Scheme Configuration</h2>
+      <n-switch
+        v-model:checked="isPreview"
+        :round="false"
+        size="small"
+      >
+        <template #checked>Preview</template>
+        <template #unchecked>Edit</template>
+      </n-switch>
+    </div>
     <n-form>
       <n-form-item label="Address:" path="schemeAddress">
   <n-input
     v-model:value="address"
     placeholder="Enter server address"
+    :disabled="isPreview"
   />
       </n-form-item>
 
@@ -106,6 +117,7 @@ const unixFilePerm = computed({
           v-model:value="httpPort"
           :min="0"
           :max="65535"
+          :disabled="isPreview"
         />
       </n-form-item>
 
@@ -114,17 +126,19 @@ const unixFilePerm = computed({
           v-model:value="httpsPort"
           :min="0"
           :max="65535"
+          :disabled="isPreview"
         />
       </n-form-item>
 
       <n-form-item label="Force HTTPS:" path="schemeForceHttps">
-        <n-switch v-model:checked="forceHttps" />
+        <n-switch v-model:checked="forceHttps" :disabled="isPreview" />
       </n-form-item>
 
       <n-form-item label="Cert File:" path="schemeCertFile">
         <n-input
           v-model:value="certFile"
           placeholder="Enter certificate file path"
+          :disabled="isPreview"
         />
       </n-form-item>
 
@@ -132,6 +146,7 @@ const unixFilePerm = computed({
         <n-input
           v-model:value="keyFile"
           placeholder="Enter key file path"
+          :disabled="isPreview"
         />
       </n-form-item>
 
@@ -139,6 +154,7 @@ const unixFilePerm = computed({
         <n-input
           v-model:value="unixFile"
           placeholder="Enter Unix socket file path"
+          :disabled="isPreview"
         />
       </n-form-item>
 
@@ -146,8 +162,24 @@ const unixFilePerm = computed({
         <n-input
           v-model:value="unixFilePerm"
           placeholder="Enter Unix file permissions"
+          :disabled="isPreview"
         />
       </n-form-item>
     </n-form>
+
+    <PreviewConfig v-if="isPreview" :config="config" />
   </div>
 </template>
+
+<style scoped>
+.config-section {
+  margin-bottom: 24px;
+}
+
+.config-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+</style>
