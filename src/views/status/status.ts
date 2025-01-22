@@ -16,6 +16,15 @@ export const useStatus = <T extends { running: boolean; pid?: number }>() => {
   const showVersionDialog = ref(false);
   const versionInfo = ref<AlistVersionInfo | null>(null);
 
+  const checkSystemStatus = async () => {
+    // Simulate an async operation that returns a status
+    return new Promise<boolean>((resolve) => {
+      setTimeout(() => {
+        resolve(Math.random() > 0.5);
+      }, 1000);
+    });
+  };
+
   return reactive({
     status,
     message,
@@ -28,6 +37,7 @@ export const useStatus = <T extends { running: boolean; pid?: number }>() => {
     showOptions,
     useProxy,
     showVersionDialog,
-    versionInfo
+    versionInfo,
+    checkSystemStatus
   });
 };

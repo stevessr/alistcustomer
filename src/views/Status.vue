@@ -56,6 +56,32 @@ const handleGetVersion = async () => {
   showVersionDialog.value = true;
 }
 
+const handleCheckStatus = async () => {
+  try {
+    loading.value = true;
+    const systemStatus = await statusStore.checkSystemStatus();
+    status.value.running = systemStatus;
+    message.value = systemStatus ? '系统运行正常' : '系统出现问题';
+    
+    statusHistory.value.unshift({
+      type: systemStatus ? 'success' : 'error',
+      title: systemStatus ? '系统检查正常' : '系统检查异常',
+      content: message.value,
+      time: new Date().toLocaleString(),
+      status: systemStatus
+    });
+    
+    if (statusHistory.value.length > 50) {
+      statusHistory.value.pop();
+    }
+  } catch (error) {
+    message.value = '系统状态检查失败';
+    console.error('Failed to check system status:', error);
+  } finally {
+    loading.value = false;
+  }
+}
+
 const updateStatusValues = (metrics: any) => {
   uptime.value = metrics.uptime;
   cpuUsage.value = metrics.cpuUsage;
@@ -147,6 +173,9 @@ onUnmounted(() => {
 
         <n-button @click="showOptions = true" secondary>
           可选参数
+        </n-button>
+        <n-button @click="handleCheckStatus" type="primary" style="margin-left: 8px">
+          检查系统状态
         </n-button>
 
         <n-modal v-model:show="showOptions" title="可选参数">
