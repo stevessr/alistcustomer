@@ -20,6 +20,7 @@ import {
   WineOutline as WineIcon,
   Home as Home,
   Attach as Attach,
+  DownloadOutline as DownloadIcon,
 } from "@vicons/ionicons5";
 import { Question as Question } from "@vicons/fa";
 import { Status24Regular as status } from "@vicons/fluent";
@@ -137,6 +138,24 @@ const menuOptions: MenuOption[] = [
       ),
     key: "change-password",
     icon: renderIcon(PersonIcon),
+    disabled: false,
+  },
+  {
+    label: () =>
+      h(
+        "a",
+        {
+          href: "/download",
+          target: "_self",
+          rel: "noopenner noreferrer",
+          onClick: () => {
+            console.log("clicked download");
+          },
+        },
+        "下载AList"
+      ),
+    key: "download",
+    icon: renderIcon(DownloadIcon),
     disabled: false,
   },
   {

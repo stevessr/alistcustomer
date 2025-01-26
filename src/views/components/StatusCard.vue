@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref } from "vue";
+import {getAlistVersion} from "../status/api.ts";
 
 defineProps<{
   status: {
@@ -26,6 +27,10 @@ const emit = defineEmits<{
   (e: 'download'): void;
   (e: 'getVersion'): void;
 }>();
+
+function updateVersionInfo(){
+  this.versionInfo.value = getAlistVersion();
+}
 </script>
 
 <template>

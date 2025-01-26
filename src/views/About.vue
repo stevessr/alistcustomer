@@ -1,9 +1,5 @@
 <template>
   <BaseLayout>
-    <template #header>
-      <h1>About Page</h1>
-    </template>
-    
     <n-card title="这是什么" class="about-card">
       写一下，测试一下自己而已
     </n-card>

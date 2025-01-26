@@ -1,9 +1,17 @@
-// main.js
-import { createApp } from 'vue';
-import App from './App.vue';
-import router from './router'; // 引入路由配置
+import { createApp } from 'vue'
+import App from './App.vue'
+import router from './router'
+import i18n from './locales'
 
-const app = createApp(App);
+import './assets/tailwind.css'
+import { devtools } from "@vue/devtools";
+if (process.env.NODE_ENV === "development") {
+    devtools.connect();
+  }
 
-app.use(router); // 使用 Vue Router
-app.mount('#app');
+const app = createApp(App)
+
+app.use(router)
+app.use(i18n)
+
+app.mount('#app')

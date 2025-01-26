@@ -1,9 +1,5 @@
 <template>
   <BaseLayout>
-    <template #header>
-      <h1>Home Page</h1>
-    </template>
-    
     <n-card class="home-card">
       <p>Welcome to the AList Customer Portal</p>
     </n-card>

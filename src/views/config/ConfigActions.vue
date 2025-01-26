@@ -3,7 +3,7 @@ import { NButton } from 'naive-ui';
 import { useMessage } from 'naive-ui';
 
 const message = useMessage();
-const emit = defineEmits(['save-config']);
+const emit = defineEmits(['save-config', 'preview-config']);
 
 const handleSave = () => {
   try {
@@ -17,6 +17,14 @@ const handleSave = () => {
 
 <template>
   <div class="config-actions-side">
+    <n-button 
+      type="info"
+      size="large"
+      @click="emit('preview-config')"
+      style="margin-right: 12px"
+    >
+      预览配置
+    </n-button>
     <n-button 
       type="primary"
       size="large"

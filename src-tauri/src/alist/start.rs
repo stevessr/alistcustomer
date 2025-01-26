@@ -2,7 +2,7 @@ use std::process::Command;
 #[allow(unused_imports)]
 use std::fs::{self, Permissions};
 #[allow(unused_imports)]
-use sysinfo::{ProcessExt, System, SystemExt, Pid, PidExt};  // 导入 PidExt
+use sysinfo::{Process, System, Pid};  // Updated imports for sysinfo 0.30.0
 use crate::alist::share::{AlistState, AlistStatus};
 use crate::alist::find_file::find_alist;
 use crate::alist::find_process::find_existing_alist_process;

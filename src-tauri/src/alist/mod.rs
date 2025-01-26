@@ -12,7 +12,7 @@ pub use get_version::get_alist_version;
 pub(crate) mod reset_password;
 pub use reset_password::set_alist_password;
 pub(crate) mod status;
-pub use status::get_alist_status;
+pub use status::{get_alist_status, get_alist_metrics};
 pub(crate) mod clean;
 pub use clean::delete_data_folder;
 pub(crate) mod download;
