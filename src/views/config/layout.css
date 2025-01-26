@@ -4,20 +4,35 @@
   padding: 24px;
   transition: all var(--transition-duration) ease;
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 260px;
+  grid-template-columns: minmax(0, 1fr);
   gap: 24px;
   height: calc(100vh - 48px);
+}
+
+@media (min-width: 1024px) {
+  .config-container {
+    grid-template-columns: minmax(0, 1fr) 260px;
+    gap: 32px;
+  }
 }
 
 .config-actions-side {
   position: sticky;
   top: 24px;
-  width: 260px;
+  width: 100%;
   height: fit-content;
   padding: 16px;
   background: var(--n-color-modal);
   border-radius: var(--n-border-radius);
   box-shadow: var(--n-box-shadow);
+  margin-bottom: 24px;
+}
+
+@media (min-width: 1024px) {
+  .config-actions-side {
+    width: 260px;
+    margin-bottom: 0;
+  }
 }
 
 .config-actions-side .btn {
@@ -28,12 +43,20 @@
 
 .config-grid {
   display: grid;
-  gap: 24px;
-  grid-template-columns: repeat(auto-fit, minmax(360px, 1fr));
+  gap: 20px;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
   margin-bottom: 0;
   transition: transform 0.2s ease, box-shadow 0.2s ease;
   height: 100%;
   padding-bottom: 24px;
+  overflow: hidden;
+}
+
+@media (min-width: 768px) {
+  .config-grid {
+    gap: 24px;
+    grid-template-columns: repeat(auto-fit, minmax(360px, 1fr));
+  }
 }
 
 .config-grid .config-section {
@@ -64,4 +87,23 @@
 .config-form {
   height: 100%;
   overflow: auto;
+  scroll-behavior: smooth;
+  padding-right: 8px;
+}
+
+.config-form::-webkit-scrollbar {
+  width: 6px;
+}
+
+.config-form::-webkit-scrollbar-track {
+  background: var(--n-color-modal);
+}
+
+.config-form::-webkit-scrollbar-thumb {
+  background: var(--n-color-border);
+  border-radius: 3px;
+}
+
+.config-form::-webkit-scrollbar-thumb:hover {
+  background: var(--n-color-border-hover);
 }

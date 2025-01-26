@@ -24,16 +24,8 @@ const schemeConfig = computed(() => props.config?.scheme);
 </script>
 
 <template>
-  <n-card class="preview-container">
-    <template #header>
-      <h2>Configuration Preview</h2>
-    </template>
-
     <n-space vertical>
       <n-card v-if="schemeConfig" class="preview-section">
-        <template #header>
-          <h3>Scheme Configuration</h3>
-        </template>
         <div class="preview-content">
           <template v-if="schemeConfig.unix_file">
             <p>Unix Socket: {{ schemeConfig.unix_file }}</p>

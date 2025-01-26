@@ -1,9 +1,16 @@
-//use std::process::Child;
 use std::path::Path;
 use tokio::sync::Mutex;
 use log::{error, info};
 use crate::alist::share::{AlistState, AlistStatus, AlistPath};
 use crate::alist::find_process::find_existing_alist_process;
+use sysinfo::{System, Pid}; 
+
+#[derive(Clone, serde::Serialize)]
+pub struct AlistMetrics {
+    cpu_usage: f32,
+    memory_usage: u64,
+    uptime: u64,
+}
 
 #[tauri::command]
 pub async fn get_alist_status(
@@ -36,6 +43,32 @@ async fn check_alist_status(
         running: false,
         pid: None,
     })
+}
+
+#[tauri::command]
+pub async fn get_alist_metrics(
+    state: tauri::State<'_, Mutex<AlistState>>,
+    alist_path: tauri::State<'_, Mutex<AlistPath>>,
+) -> Result<AlistMetrics, String> {
+    let status = check_alist_status(&state, &alist_path).await?;
+    
+    if !status.running {
+        return Err("AList is not running".to_string());
+    }
+
+    let pid = status.pid.ok_or("No PID found for running process")?;
+    let mut sys = System::new_all(); // 使用 new_all 确保加载所有信息
+    sys.refresh_all(); // 刷新所有数据
+
+    if let Some(process) = sys.process(Pid::from(pid as usize)) {
+        Ok(AlistMetrics {
+            cpu_usage: process.cpu_usage(),
+            memory_usage: process.memory(),
+            uptime: process.run_time(),
+        })
+    } else {
+        Err("Failed to get process metrics".to_string())
+    }
 }
 
 async fn check_managed_process(

@@ -29,5 +29,5 @@ reqwest = { version = "0.11", features = ["blocking"] }
 zip = "0.6"
 tokio = { version = "1", features = ["full"] }
 regex = "1.5"
-sysinfo = "0.29.0"  # 使用最新版本
+sysinfo = "0.30.5"
 lazy_static = "1.5.0"

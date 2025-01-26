@@ -4,7 +4,7 @@ use std::fs;
 //use std::sync::Mutex;
 //use serde::Serialize;
 #[allow(unused_imports)]
-use sysinfo::{ProcessExt, System, SystemExt, Pid, PidExt};  // 导入 PidExt
+use sysinfo::{Process, System, Pid};  // Updated imports for sysinfo 0.30.0
 //use std::path::Path;
 use crate::alist::find_file::find_alist;
 

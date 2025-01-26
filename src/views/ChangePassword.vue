@@ -1,9 +1,5 @@
 <template>
   <BaseLayout>
-    <template #header>
-      <h1>Change Password</h1>
-    </template>
-    
     <change-password />
   </BaseLayout>
 </template>

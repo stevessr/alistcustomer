@@ -1,0 +1,16 @@
+@layer components {
+  .btn-primary {
+    @apply px-4 py-2;
+    @apply bg-primary-500 text-white;
+    @apply rounded-lg;
+    @apply hover:bg-primary-600;
+    @apply transition-colors;
+  }
+  
+  .card {
+    @apply bg-white dark:bg-gray-800;
+    @apply rounded-xl;
+    @apply shadow-md;
+    @apply p-6;
+  }
+}

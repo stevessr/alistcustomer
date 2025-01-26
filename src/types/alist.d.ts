@@ -1,8 +1,15 @@
 import type { Ref } from 'vue';
 
 export interface AlistStatus {
-  running: boolean;
-  pid: number | undefined;
+  running: boolean
+  pid: number | null
+}
+
+export interface AlistMetrics {
+  cpu_usage: number
+  memory_usage: number
+  uptime: number
+  threads: number
 }
 
 export type AlistStatusRef = Ref<AlistStatus>;

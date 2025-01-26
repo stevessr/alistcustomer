@@ -4,6 +4,7 @@ import { invoke } from '@tauri-apps/api/core';
 import ConfigColorPicker from './ConfigColorPicker.vue';
 import ConfigDraggableSections from './ConfigDraggableSections.vue';
 import ConfigActions from './ConfigActions.vue';
+import ConfigPreviewDialog from './ConfigPreviewDialog.vue';
 import GeneralConfig from './GeneralConfig.vue';
 import DatabaseConfig from './DatabaseConfig.vue';
 import MeilisearchConfig from './MeilisearchConfig.vue';
@@ -15,6 +16,7 @@ import S3Config from './S3Config.vue';
 import FtpConfig from './FtpConfig.vue';
 import SftpConfig from './SftpConfig.vue';
 import { defaultColors } from './constants';
+import ThemeToggle from '../../components/ThemeToggle.vue';
 
 interface SectionColors {
   general: string;
@@ -84,6 +86,8 @@ const config = ref<Config>({
   }
 });
 
+const previewDialog = ref()
+
 // 初始化配置
 function deepMerge(target: any, source: any) {
   for (const key of Object.keys(source)) {
@@ -134,22 +138,45 @@ const handleSave = async () => {
     alert(`Failed to save config: ${error}`);
   }
 };
-
-// 初始化配置和加载配置的逻辑...
 </script>
 
 <template>
   <div class="config-container">
-    <h1 class="config-title">Config Editor</h1>
+    <div class="config-header">
+      <h1 class="config-title">Config Editor</h1>
+      <ThemeToggle />
+    </div>
     <ConfigColorPicker 
       :colors="config?.section_colors || {}"
       @update:colors="(newColors) => { if (config) config.section_colors = newColors }"
     />
-<ConfigDraggableSections 
-  :components="configComponents"
-  :colors="config?.section_colors || {}"
-  :config="config"
-/>
-    <ConfigActions @save-config="handleSave" />
+    <ConfigDraggableSections 
+      :components="configComponents"
+      :colors="config?.section_colors || {}"
+      :config="config"
+    />
+    <ConfigActions @save-config="handleSave" @preview-config="previewDialog?.showPreview(config)" />
+    <ConfigPreviewDialog ref="previewDialog" />
   </div>
 </template>
+
+<style scoped>
+.config-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 24px;
+}
+
+.config-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 24px;
+}
+
+@media (max-width: 768px) {
+  .config-container {
+    padding: 16px;
+  }
+}
+</style>

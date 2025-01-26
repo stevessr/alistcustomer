@@ -126,33 +126,8 @@ onUnmounted(() => {
   api.value.stopPolling();
 });
 </script>
-
 <template>
   <BaseLayout>
-    <template #header>
-      <h1>Status Page</h1>
-      <p>这是状态页面</p>
-      <n-space vertical>
-        <n-statistic label="运行时间" :value="formattedUptime" />
-        <n-progress
-          type="line"
-          :percentage="cpuUsage"
-          status="success"
-          :indicator-placement="'inside'"
-        >
-          CPU 使用率: {{ cpuUsage }}%
-        </n-progress>
-        <n-progress
-          type="line"
-          :percentage="memoryUsage"
-          status="warning"
-          :indicator-placement="'inside'"
-        >
-          内存使用率: {{ memoryUsage }}%
-        </n-progress>
-      </n-space>
-    </template>
-
     <n-tabs type="line" animated>
       <n-tab-pane name="status" tab="当前状态">
         <StatusCard
