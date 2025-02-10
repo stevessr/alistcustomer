@@ -33,6 +33,7 @@ export function createGetAlistStatus(status: Ref<AlistStatus>, message: Ref<stri
   return async function() {
     const alistStatusStore = await Store.load("alist-status.store");
     try {
+      console.log("on going");
       await invoke("manage_alist_state");
       const statusResult = await invoke<AlistStatus>("get_alist_status");
       if (!statusResult) {
@@ -141,8 +142,13 @@ export function createDownloadAlist(
 export function createGetAlistVersion(versionInfo: Ref<AlistVersionInfo | null>, message: Ref<string>) {
   return async function() {
     try {
+      if (!versionInfo || !message) {
+        throw new Error('References are not properly initialized');
+      }
       const result = await invoke<AlistVersionInfo>("get_alist_version");
-      versionInfo.value = result;
+      if (versionInfo) {
+        versionInfo.value = result;
+      }
       return result;
     } catch (error) {
       message.value = `获取版本信息失败：${error}`;

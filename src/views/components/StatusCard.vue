@@ -1,24 +1,20 @@
 <script setup lang="ts">
-import { ref } from "vue";
-import {getAlistVersion} from "../status/api.ts";
+import { ref, toRef } from "vue";
+import { createGetAlistVersion } from "../status/api.ts";
+import type { AlistVersionInfo } from "../../types/alist";
 
-defineProps<{
+const props = defineProps<{
   status: {
     running: boolean;
     pid?: number;
   };
   message: string;
-  versionInfo?: {
-    version: string;
-    web_version: string;
-    build_date?: string;
-    commit_hash?: string;
-    commit_id?: string;
-    platform?: string;
-  } | null;
+  versionInfo?: AlistVersionInfo | null;
   loading: boolean;
   showVersionDialog?: boolean;
 }>();
+
+const status = toRef(props, 'status');
 
 const emit = defineEmits<{
   (e: 'refresh'): void;
@@ -28,8 +24,23 @@ const emit = defineEmits<{
   (e: 'getVersion'): void;
 }>();
 
-function updateVersionInfo(){
-  this.versionInfo.value = getAlistVersion();
+const versionInfoRef = ref<AlistVersionInfo | null>(props.versionInfo ?? null);
+const messageRef = ref<string>(props.message || '');
+
+const getAlistVersion = createGetAlistVersion(versionInfoRef, messageRef);
+const isGettingVersion = ref(false);
+
+async function updateVersionInfo() {
+  isGettingVersion.value = true;
+  try {
+    await getAlistVersion();
+    // 同步父组件状态
+    emit('getVersion');
+  } catch (error) {
+    messageRef.value = error instanceof Error ? error.message : '获取版本信息失败';
+  } finally {
+    isGettingVersion.value = false;
+  }
 }
 </script>
 
@@ -54,11 +65,11 @@ function updateVersionInfo(){
           <n-space vertical>
             <n-tag type="info" size="small">核心版本: {{ versionInfo?.version }}</n-tag>
             <n-tag type="info" size="small">Web版本: {{ versionInfo?.web_version }}</n-tag>
-            <n-tag v-if="versionInfo?.build_date" type="info" size="small">
-              构建日期: {{ versionInfo?.build_date }}
+            <n-tag v-if="versionInfo?.built_at" type="info" size="small">
+              构建日期: {{ versionInfo?.built_at }}
             </n-tag>
-            <n-tag v-if="versionInfo?.commit_hash" type="info" size="small">
-              Git提交: {{ versionInfo?.commit_hash?.slice(0, 7) }}
+            <n-tag v-if="versionInfo?.commit_id" type="info" size="small">
+              Git提交: {{ versionInfo?.commit_id?.slice(0, 7) }}
             </n-tag>
             <n-tag v-if="versionInfo?.platform" type="info" size="small">
               平台: {{ versionInfo?.platform }}
@@ -70,7 +81,7 @@ function updateVersionInfo(){
       <n-space justify="center">
         <n-button-group>
           <n-button 
-            @click="emit('refresh')" 
+            @click="emit('refresh')"
             type="primary" 
             :loading="loading"
           >
@@ -78,18 +89,18 @@ function updateVersionInfo(){
           </n-button>
           <n-button 
             @click="emit('start')"
-            :disabled="status?.running || loading"
+            :disabled="status.running || loading"
             :loading="loading"
-            v-if="!status?.running"
+            v-if="!status.running"
             type="success"
           >
             启动 alist
           </n-button>
           <n-button 
             @click="emit('stop')"
-            :disabled="!status?.running || loading"
+            :disabled="!status.running || loading"
             :loading="loading"
-            v-if="status?.running"
+            v-if="status.running"
             type="error"
           >
             停止 alist
@@ -98,7 +109,7 @@ function updateVersionInfo(){
       </n-space>
 
       <n-space justify="center" class="additional-actions">
-        <n-button @click="emit('getVersion')" secondary :loading="loading">
+        <n-button @click="updateVersionInfo" secondary :loading="isGettingVersion">
           获取版本信息
         </n-button>
         <n-button 

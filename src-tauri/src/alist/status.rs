@@ -12,13 +12,6 @@ pub struct AlistMetrics {
     uptime: u64,
 }
 
-#[tauri::command]
-pub async fn get_alist_status(
-    state: tauri::State<'_, Mutex<AlistState>>,
-    alist_path: tauri::State<'_, Mutex<AlistPath>>
-) -> Result<AlistStatus, String> {
-    check_alist_status(&state, &alist_path).await
-}
 
 async fn check_alist_status(
     state: &tauri::State<'_, Mutex<AlistState>>,
@@ -75,7 +68,7 @@ async fn check_managed_process(
     state: &tauri::State<'_, Mutex<AlistState>>
 ) -> Result<Option<AlistStatus>, String> {
     let state = state.lock().await;
-    let mut process = state.0.lock().await;
+    let mut process = state.process.lock().await;
     
     if let Some(process) = &mut *process {
         match process.try_wait() {
