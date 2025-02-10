@@ -21,10 +21,18 @@ pub async fn get_alist_version() -> Result<AlistVersionInfo, String> {
     let alist_path = find_alist().ok_or_else(|| "Failed to find alist executable".to_string())?;
 
     // 执行 alist version 命令
+    // 添加详细的调试日志
+    println!("Executing alist version command at: {}", alist_path.display());
+    
+    // 处理路径中的空格
     let output = Command::new(&alist_path)
         .arg("version")
         .output()
-        .map_err(|e| format!("Failed to execute alist version at {}: {}", alist_path.display(), e))?;
+        .map_err(|e| format!(
+            "Failed to execute alist version at '{}': {}\nCheck if the file exists and has execute permissions.",
+            alist_path.display(),
+            e
+        ))?;
 
     if !output.status.success() {
         let stderr = str::from_utf8(&output.stderr).unwrap_or("Failed to read stderr");
@@ -44,18 +52,13 @@ pub async fn get_alist_version() -> Result<AlistVersionInfo, String> {
         ))?;
 
     // 使用正则表达式解析输出
-    // 更健壮的正则表达式，允许字段间有空行和其他内容
-    let re = Regex::new(r"(?x)
-        Built\s*At:\s*(?P<built_at>[^\n]+)
-        .*?
-        Go\s*Version:\s*(?P<go_version>[^\n]+)
-        .*?
-        Author:\s*(?P<author>[^\n]+)
-        .*?
-        Commit\s*ID:\s*(?P<commit_id>[^\n]+)
-        .*?
-        Version:\s*(?P<version>[^\n]+)
-        .*?
+    // 更灵活的正则表达式，处理不同格式和空白
+    let re = Regex::new(r"(?xi)
+        ^Built\s*At:\s*(?P<built_at>[^\n]+)\s*\n
+        Go\s*Version:\s*(?P<go_version>[^\n]+)\s*\n
+        Author:\s*(?P<author>[^\n]+)\s*\n
+        Commit\s*ID:\s*(?P<commit_id>[^\n]+)\s*\n
+        Version:\s*(?P<version>[^\n]+)\s*\n
         WebVersion:\s*(?P<web_version>[^\n]+)")
         .map_err(|e| format!("Failed to compile regex: {}", e))?;
 

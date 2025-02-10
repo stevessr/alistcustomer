@@ -1,6 +1,9 @@
 <template>
   <BaseLayout>
     <div class="download-container">
+      <n-button @click="showOptions = true" secondary style="margin-bottom: 16px">
+        可选参数
+      </n-button>
       <n-form :model="form" label-placement="left" label-width="120px">
         <n-form-item label="版本">
           <n-select
@@ -37,7 +40,35 @@
             下载并解压
           </n-button>
         </n-form-item>
-      </n-form>
+  </n-form>
+
+      <n-modal :show="showOptions" @update:show="(val: boolean) => showOptions = val" title="可选参数">
+        <n-card style="width: 400px">
+          <n-space vertical>
+            <n-checkbox v-model:checked="useProxy">使用代理</n-checkbox>
+            <n-input
+              v-model="proxyUrl"
+              placeholder="请输入代理URL"
+              :disabled="!useProxy"
+            />
+            <n-input
+              v-model="proxyUsername"
+              placeholder="请输入代理用户名"
+              :disabled="!useProxy"
+            />
+            <n-input
+              v-model="proxyPassword"
+              placeholder="请输入代理密码"
+              :disabled="!useProxy"
+              type="password"
+            />
+            <div style="text-align: center">
+              <n-button @click="showOptions = false">关闭</n-button>
+              <n-button @click="deleteDataFolder">删除数据文件夹</n-button>
+            </div>
+          </n-space>
+        </n-card>
+      </n-modal>
     </div>
   </BaseLayout>
 </template>
@@ -52,6 +83,22 @@ const form = ref({
   proxy: '',
   version: 'latest'
 })
+
+const showOptions = ref(false)
+const useProxy = ref(false)
+const proxyUrl = ref('')
+const proxyUsername = ref('')
+const proxyPassword = ref('')
+
+const deleteDataFolder = async () => {
+  try {
+    await invoke('delete_data_folder')
+    message.success('数据文件夹删除成功')
+  } catch (error) {
+    message.error('删除数据文件夹失败')
+    console.error(error)
+  }
+}
 
 const loading = ref(false)
 const progress = ref(0)

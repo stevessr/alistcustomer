@@ -5,7 +5,7 @@
     "module": "ESNext",
     "lib": ["ES2020", "DOM", "DOM.Iterable"],
     "skipLibCheck": true,
-    "types": ["vite/client", "element-plus/global"],
+    "types": ["vite/client", "vite-plugin-windicss/client"],
 
     /* Bundler mode */
     "moduleResolution": "bundler",
