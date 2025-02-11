@@ -8,25 +8,12 @@
           :message="message"
           :version-info="versionInfo"
           :loading="loading"
-          @refresh="async () => {
-            loading.value = true;
-            try {
-              const result = await api.getAlistStatus();
-              if (result && typeof result === 'object') {
-                status.running = result.running || false;
-                status.pid = result.pid;
-              }
-            } catch (error) {
-              message = '刷新状态失败，请检查控制台';
-              status.running = false;
-              status.pid = undefined;
-            } finally {
-              loading = false;
-            }
+          @refresh="handleRefresh"
+          @start="async () => {
+            await api.startAlist();
+            await handleRefresh();
           }"
-          @start="async () => await api.startAlist()"
           @stop="async () => await api.stopAlist()"
-          @download="async () => await api.downloadAlist()"
           @getVersion="handleGetVersion"
           :show-version-dialog="showVersionDialog"
           aria-live="polite"
@@ -36,6 +23,7 @@
         <n-button @click="handleCheckStatus" type="primary">
           检查系统状态
         </n-button>
+      </n-tab-pane>
 
       <n-tab-pane name="version" tab="版本信息">
         <n-card style="width: 600px">
@@ -66,7 +54,6 @@
           </n-space>
         </n-card>
       </n-tab-pane>
-      </n-tab-pane>
     </n-tabs>
   </BaseLayout>
 </template>
@@ -79,7 +66,9 @@ import { useStatus } from "./status/status";
 import { useAlistApi } from "../composables/useAlistApi";
 
 const statusStore = useStatus();
-const { message, loading, showVersionDialog } = statusStore;
+const { showVersionDialog } = statusStore;
+const message = ref(statusStore.message);
+const loading = ref(statusStore.loading);
 const status = ref<{ running: boolean; pid: number | undefined }>({ running: false, pid: undefined });
 const versionInfo = ref(statusStore.versionInfo);
 const api = ref(useAlistApi());
@@ -92,9 +81,41 @@ onUnmounted(() => {
   api.value.stopPolling();
 });
 
+const handleRefresh = async () => {
+  loading.value = true;
+  try {
+interface AlistStatusResponse {
+  running: boolean;
+  pid?: number;
+}
+
+    const result = (await api.value.getAlistStatus() as unknown) as AlistStatusResponse | null;
+    if (result) {
+      status.value = {
+        running: result.running,
+        pid: result.pid
+      };
+    } else {
+      status.value = {
+        running: false,
+        pid: undefined
+      };
+    }
+  } catch (error) {
+    console.error('Failed to refresh status:', error);
+    message.value = '刷新状态失败，请检查控制台';
+    status.value = {
+      running: false,
+      pid: undefined
+    };
+  } finally {
+    loading.value = false;
+  }
+}
+
 const handleGetVersion = async () => {
   try {
-            loading.value = true;
+    loading.value = true;
     message.value = '获取版本信息中...';
     const versionData = await api.value.getAlistVersion();
     versionInfo.value = versionData;
@@ -112,9 +133,11 @@ const handleGetVersion = async () => {
 const handleCheckStatus = async () => {
   try {
     loading.value = true;
-    const systemStatus = await statusStore.checkSystemStatus();
-    status.value.running = systemStatus.running;
-    status.value.pid = systemStatus.pid ?? undefined;
+    const systemStatus = await statusStore.checkSystemStatus() as { running: boolean; pid?: number };
+    status.value = {
+      running: systemStatus.running || false,
+      pid: systemStatus.pid ?? undefined
+    };
     message.value = systemStatus.running ? '系统运行正常' : '系统出现问题';
   } catch (error) {
     console.error('Failed to check system status:', error);

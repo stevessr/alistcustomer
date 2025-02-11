@@ -4,7 +4,7 @@ import type { AlistStatus, AlistVersionInfo } from "../../types/alist";
 import { invoke } from '@tauri-apps/api/core';
 
 export const useStatus = () => {
-  const status = ref<AlistStatus>({ running: false, pid: null });
+  const status = ref<AlistStatus>({ running: false, pid: undefined });
   const message = ref("");
   const loading = ref(false);
   const error = ref(false);
@@ -22,7 +22,7 @@ export const useStatus = () => {
       return await invoke<AlistStatus>('get_alist_status');
     } catch (error) {
       console.error('Failed to check alist status:', error);
-      return { running: false, pid: null };
+    return { running: false, pid: undefined };
     }
   };
 
