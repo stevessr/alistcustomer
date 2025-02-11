@@ -20,7 +20,6 @@ const emit = defineEmits<{
   (e: 'refresh'): void;
   (e: 'start'): void;
   (e: 'stop'): void;
-  (e: 'download'): void;
   (e: 'getVersion'): void;
 }>();
 
@@ -111,15 +110,6 @@ async function updateVersionInfo() {
       <n-space justify="center" class="additional-actions">
         <n-button @click="updateVersionInfo" secondary :loading="isGettingVersion">
           获取版本信息
-        </n-button>
-        <n-button 
-          @click="emit('download')"
-          :disabled="status.running || loading"
-          :loading="loading"
-          v-if="!status.running"
-          secondary
-        >
-          下载 alist
         </n-button>
       </n-space>
 
