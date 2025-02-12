@@ -1,46 +1,37 @@
 <script setup lang="ts">
-import { ref, toRef } from "vue";
-import { createGetAlistVersion } from "../status/api.ts";
+import { computed , onMounted  } from "vue";
 import type { AlistVersionInfo } from "../../types/alist";
 
-const props = defineProps<{
-  status: {
-    running: boolean;
-    pid?: number;
-  };
+interface ProcessStatus {
+  running: boolean;
+  pid?: number;
+}
+
+interface Props {
+  status: ProcessStatus;
   message: string;
   versionInfo?: AlistVersionInfo | null;
   loading: boolean;
   showVersionDialog?: boolean;
-}>();
+}
 
-const status = ref(props.status);
+const props = withDefaults(defineProps<Props>(), {
+  showVersionDialog: false,
+  versionInfo: undefined, // 明确声明当不传时的默认值
+});
+
+const status = computed(() => props.status);
 
 const emit = defineEmits<{
-  (e: 'refresh'): void;
-  (e: 'start'): void;
-  (e: 'stop'): void;
-  (e: 'getVersion'): void;
+  (e: "refresh"): void;
+  (e: "start"): void;
+  (e: "stop"): void;
+  (e: "getVersion"): void;
 }>();
 
-const versionInfoRef = ref<AlistVersionInfo | null>(props.versionInfo ?? null);
-const messageRef = ref<string>(props.message || '');
-
-const getAlistVersion = createGetAlistVersion(versionInfoRef, messageRef);
-const isGettingVersion = ref(false);
-
-async function updateVersionInfo() {
-  isGettingVersion.value = true;
-  try {
-    await getAlistVersion();
-    // 同步父组件状态
-    emit('getVersion');
-  } catch (error) {
-    messageRef.value = error instanceof Error ? error.message : '获取版本信息失败';
-  } finally {
-    isGettingVersion.value = false;
-  }
-}
+onMounted(() => {
+  emit('refresh')
+})
 </script>
 
 <template>
@@ -49,7 +40,9 @@ async function updateVersionInfo() {
       <n-alert :type="status.running ? 'success' : 'error'">
         当前 alist 状态：{{ status?.running ? "运行中" : "已停止" }}
         <template #icon>
-          <n-icon :name="status?.running ? 'checkmark-circle' : 'close-circle'" />
+          <n-icon
+            :name="status?.running ? 'checkmark-circle' : 'close-circle'"
+          />
         </template>
       </n-alert>
 
@@ -57,21 +50,17 @@ async function updateVersionInfo() {
         <n-descriptions-item label="进程 ID">
           {{ status?.pid || "无" }}
         </n-descriptions-item>
-        <n-descriptions-item label="状态信息">
+        <n-descriptions-item label="状态信息" v-if="message">
           {{ message }}
         </n-descriptions-item>
       </n-descriptions>
 
       <n-space justify="center">
         <n-button-group>
-          <n-button 
-            @click="emit('refresh')"
-            type="primary" 
-            :loading="loading"
-          >
+          <n-button @click="emit('refresh')" type="primary" :loading="loading">
             刷新状态
           </n-button>
-          <n-button 
+          <n-button
             @click="emit('start')"
             :disabled="status.running || loading"
             :loading="loading"
@@ -80,7 +69,7 @@ async function updateVersionInfo() {
           >
             启动 alist
           </n-button>
-          <n-button 
+          <n-button
             @click="emit('stop')"
             :disabled="!status.running || loading"
             :loading="loading"
@@ -103,5 +92,4 @@ async function updateVersionInfo() {
 .additional-actions {
   margin-top: 20px;
 }
-
 </style>
