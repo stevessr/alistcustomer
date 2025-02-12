@@ -12,8 +12,8 @@ import ConfigPreview from './ConfigPreview.vue'
 const visible = ref(false)
 const config = ref()
 
-function showPreview(currentConfig: any) {
-  config.value = currentConfig
+function showPreview(currentConfig: Config) { // 使用具体的Config类型
+  config.value = JSON.parse(JSON.stringify(currentConfig)) // 解除Proxy响应式
   visible.value = true
 }
 
