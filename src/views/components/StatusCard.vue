@@ -14,7 +14,7 @@ const props = defineProps<{
   showVersionDialog?: boolean;
 }>();
 
-const status = toRef(props, 'status');
+const status = ref(props.status);
 
 const emit = defineEmits<{
   (e: 'refresh'): void;
@@ -60,21 +60,6 @@ async function updateVersionInfo() {
         <n-descriptions-item label="状态信息">
           {{ message }}
         </n-descriptions-item>
-        <n-descriptions-item label="版本信息" v-if="versionInfo">
-          <n-space vertical>
-            <n-tag type="info" size="small">核心版本: {{ versionInfo?.version }}</n-tag>
-            <n-tag type="info" size="small">Web版本: {{ versionInfo?.web_version }}</n-tag>
-            <n-tag v-if="versionInfo?.built_at" type="info" size="small">
-              构建日期: {{ versionInfo?.built_at }}
-            </n-tag>
-            <n-tag v-if="versionInfo?.commit_id" type="info" size="small">
-              Git提交: {{ versionInfo?.commit_id?.slice(0, 7) }}
-            </n-tag>
-            <n-tag v-if="versionInfo?.platform" type="info" size="small">
-              平台: {{ versionInfo?.platform }}
-            </n-tag>
-          </n-space>
-        </n-descriptions-item>
       </n-descriptions>
 
       <n-space justify="center">
@@ -106,13 +91,6 @@ async function updateVersionInfo() {
           </n-button>
         </n-button-group>
       </n-space>
-
-      <n-space justify="center" class="additional-actions">
-        <n-button @click="updateVersionInfo" secondary :loading="isGettingVersion">
-          获取版本信息
-        </n-button>
-      </n-space>
-
     </n-space>
   </n-card>
 </template>

@@ -9,11 +9,8 @@
           :version-info="versionInfo"
           :loading="loading"
           @refresh="handleRefresh"
-          @start="async () => {
-            await api.startAlist();
-            await handleRefresh();
-          }"
-          @stop="async () => await api.stopAlist()"
+          @start="handleStart"
+          @stop="handleStop"
           @getVersion="handleGetVersion"
           :show-version-dialog="showVersionDialog"
           aria-live="polite"
@@ -64,86 +61,96 @@ import BaseLayout from "./components/BaseLayout.vue";
 import StatusCard from "./components/StatusCard.vue";
 import { useStatus } from "./status/status";
 import { useAlistApi } from "../composables/useAlistApi";
+import type { AlistStatus, AlistStatusResponse } from "../types/alist";
 
 const statusStore = useStatus();
 const { showVersionDialog } = statusStore;
 const message = ref(statusStore.message);
-const loading = ref(statusStore.loading);
-const status = ref<{ running: boolean; pid: number | undefined }>({ running: false, pid: undefined });
+const loading = ref(false);
+const defaultStatus: AlistStatus = { running: false, pid: undefined };
+const status = ref<AlistStatus>(defaultStatus); // Ensure this is correctly typed
 const versionInfo = ref(statusStore.versionInfo);
-const api = ref(useAlistApi());
+const api = useAlistApi();
 
-onMounted(() => {
-  api.value.startPolling();
-});
+const errorHandler = (error: unknown, defaultMessage: string) => {
+  console.error(error);
+  message.value = defaultMessage;
+  return false;
+};
 
-onUnmounted(() => {
-  api.value.stopPolling();
-});
-
-const handleRefresh = async () => {
+const withLoading = async (fn: () => Promise<void>) => {
   loading.value = true;
   try {
-interface AlistStatusResponse {
-  running: boolean;
-  pid?: number;
-}
-
-    const result = (await api.value.getAlistStatus() as unknown) as AlistStatusResponse | null;
-    if (result) {
-      status.value = {
-        running: result.running,
-        pid: result.pid
-      };
-    } else {
-      status.value = {
-        running: false,
-        pid: undefined
-      };
-    }
-  } catch (error) {
-    console.error('Failed to refresh status:', error);
-    message.value = '刷新状态失败，请检查控制台';
-    status.value = {
-      running: false,
-      pid: undefined
-    };
+    await fn();
   } finally {
     loading.value = false;
   }
-}
+};
+
+const handleRefresh = async () => {
+  await withLoading(async () => {
+    try {
+      const result = await api.getAlistStatus();
+      // Ensure result is valid before accessing properties
+      status.value = { 
+        running: result?.running ?? false,
+        pid: result?.pid
+      };
+    } catch (error) {
+      errorHandler(error, '刷新状态失败，请检查控制台');
+      status.value = { running: false, pid: undefined };
+    }
+  });
+};
+
+const handleStart = async () => {
+  await withLoading(async () => {
+    try {
+      await api.startAlist();
+  await handleRefresh(); // Ensure this is called after starting Alist
+    } catch (error) {
+      errorHandler(error, '启动失败，请检查控制台');
+    }
+  });
+};
+
+const handleStop = async () => {
+  await withLoading(async () => {
+    try {
+      await api.stopAlist();
+      await handleRefresh();
+    } catch (error) {
+      errorHandler(error, '停止失败，请检查控制台');
+    }
+  });
+};
 
 const handleGetVersion = async () => {
-  try {
-    loading.value = true;
-    message.value = '获取版本信息中...';
-    const versionData = await api.value.getAlistVersion();
-    versionInfo.value = versionData;
-    showVersionDialog.value = true;
-  } catch (error) {
-    console.error('获取版本信息失败:', error);
-    message.value = '获取版本信息失败，请检查控制台';
-    showVersionDialog.value = false;
-    versionInfo.value = null;
-  } finally {
-    loading.value = false;
-  }
-}
+  await withLoading(async () => {
+    try {
+      versionInfo.value = await api.getAlistVersion();
+      showVersionDialog.value = true;
+    } catch (error) {
+      errorHandler(error, '获取版本信息失败，请检查控制台');
+      showVersionDialog.value = false;
+      versionInfo.value = null;
+    }
+  });
+};
 
 const handleCheckStatus = async () => {
-  try {
-    loading.value = true;
-    const systemStatus = await statusStore.checkSystemStatus() as { running: boolean; pid?: number };
-    status.value = {
-      running: systemStatus.running || false,
-      pid: systemStatus.pid ?? undefined
-    };
-    message.value = systemStatus.running ? '系统运行正常' : '系统出现问题';
-  } catch (error) {
-    console.error('Failed to check system status:', error);
-    message.value = '检查系统状态失败';
-  } finally {
-    loading.value = false;
-  }
-}
+  await withLoading(async () => {
+    try {
+      const systemStatus = await statusStore.checkSystemStatus();
+      // Ensure systemStatus is valid before accessing properties
+      status.value = systemStatus || { running: false, pid: undefined } as AlistStatus;
+      message.value = systemStatus?.running ? '系统运行正常' : '系统出现问题';
+    } catch (error) {
+      errorHandler(error, '检查系统状态失败');
+    }
+  });
+};
+
+onMounted(() => api.startPolling());
+onUnmounted(() => api.stopPolling());
 </script>
