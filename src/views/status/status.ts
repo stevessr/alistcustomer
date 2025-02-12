@@ -17,12 +17,13 @@ export const useStatus = () => {
   const showVersionDialog = ref(false);
   const versionInfo = ref<AlistVersionInfo | null>(null);
 
-  const checkSystemStatus = async () => {
+  const checkSystemStatus = async (): Promise<AlistStatus> => {
     try {
-      return await invoke<AlistStatus>('get_alist_status');
+      const status = await invoke<AlistStatus>('get_alist_status');
+      return status || { running: false, pid: undefined };
     } catch (error) {
       console.error('Failed to check alist status:', error);
-    return { running: false, pid: undefined };
+      return { running: false, pid: undefined };
     }
   };
 

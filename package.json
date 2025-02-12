@@ -14,7 +14,8 @@
     "lint:fix": "eslint --fix --ext .js,.ts,.vue src",
     "develop": "cls &&pnpm tauri dev",
     "devtools": "npx vue-devtools",
-    "de": "pnpm develop"
+    "de": "pnpm develop",
+    "dt": "pnpm devtools"
   },
   "dependencies": {
     "@tauri-apps/api": "^2.2.0",

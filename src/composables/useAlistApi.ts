@@ -4,7 +4,7 @@ import { useStatus } from "../views/status/status";
 import type { AlistStatus, AlistVersionInfo, Metrics, ProcessMetrics } from "@/types/alist";
 
 export function useAlistApi() {
-  const statusStore = useStatus();
+  const statusStore = useStatus()
 
   const loading = {
     status: ref(false),
@@ -21,7 +21,7 @@ export function useAlistApi() {
     stopPolling();
     pollTimer = window.setInterval(() => {
       getAlistStatus();
-    }, 2000);
+    }, 20000);
   }
 
   function stopPolling() {
@@ -34,19 +34,36 @@ export function useAlistApi() {
   async function getAlistStatus() {
     try {
       loading.status.value = true;
-      await invoke("manage_alist_state");
       
-        const statusResult = await invoke<AlistStatus>("get_alist_status");
-        console.log('Status Result:', statusResult); // Add this line for logging
-      if (!statusResult) {
-        throw new Error("Failed to get alist status");
+      // 【修复1】直接调用 get_alist_status 接口
+      const statusResult = await invoke<ProcessMetrics>("get_alist_status"); // 确保AlistStatus与ProcessMetrics类型一致
+      
+      if (import.meta.env.MODE === 'development') {
+        console.log(`[API] get_alist_status response:`, statusResult);
       }
-      statusStore.status.value.running = statusResult.running;
-      statusStore.status.value.pid = statusResult.pid;
+  
+      // 【修复2】简化验证逻辑
+      const isValidResponse = statusResult && 
+        typeof statusResult.running === 'boolean' &&
+        (statusResult.pid === null || typeof statusResult.pid === 'string');
+  
+      if (!isValidResponse) {
+        throw new Error("Invalid alist status response");
+      }
+  
+      // 【修复3】直接使用接口返回的状态
+      statusStore.status.value = {
+        running: statusResult.running,
+        pid: statusResult.pid || undefined // 转换为undefined保持类型一致
+      };
+      
       statusStore.message.value = "状态获取成功！";
+      return statusResult;
     } catch (error: unknown) {
       const err = error instanceof Error ? error : new Error(String(error));
+      statusStore.status.value = { running: false, pid: undefined };
       statusStore.message.value = `获取状态失败：${err.message}`;
+      throw err; // 抛出错误供调用方处理
     } finally {
       loading.status.value = false;
     }
@@ -55,10 +72,15 @@ export function useAlistApi() {
   async function startAlist() {
     try {
       loading.start.value = true;
+      if (import.meta.env.MODE === 'development') {
+        console.log(`[API] Calling start_alist`);
+      }
       const startResult = await invoke<AlistStatus>("start_alist");
-      statusStore.status.value.running = startResult.running;
-      statusStore.status.value.pid = startResult.pid;
-      statusStore.message.value = "alist 启动成功！";
+    statusStore.status.value.running = startResult.running;
+    statusStore.status.value.pid = startResult.pid;
+    statusStore.message.value = "alist 启动成功！";
+    // 启动后主动刷新状态
+    await getAlistStatus();
     } catch (error: unknown) {
       const err = error instanceof Error ? error : new Error(String(error));
       statusStore.message.value = `启动失败：${err.message}`;
@@ -70,6 +92,9 @@ export function useAlistApi() {
   async function stopAlist() {
     try {
       loading.stop.value = true;
+      if (import.meta.env.MODE === 'development') {
+        console.log(`[API] Calling stop_alist`);
+      }
       const stopResult = await invoke<AlistStatus>("stop_alist");
       statusStore.status.value.running = stopResult.running;
       statusStore.status.value.pid = stopResult.pid;

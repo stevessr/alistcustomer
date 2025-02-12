@@ -45,6 +45,12 @@ export interface StatusHistoryRecord {
   status: boolean;
 }
 
+export interface AlistStatusResponse {
+  status: AlistStatus;
+  metrics: Metrics;
+  version: AlistVersionInfo;
+}
+
 export interface AlistApi {
   startPolling(): void;
   stopPolling(): void;
