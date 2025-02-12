@@ -9,7 +9,7 @@
           :options="[
             { label: 'MySQL', value: 'mysql' },
             { label: 'PostgreSQL', value: 'postgres' },
-            { label: 'SQLite', value: 'sqlite' }
+            { label: 'SQLite', value: 'sqlite3' },
           ]"
         />
         <n-alert v-else type="error">
@@ -17,7 +17,7 @@
         </n-alert>
       </n-form-item>
 
-      <template v-if="config?.database && config.database.type !== 'sqlite'">
+      <template v-if="config?.database && config.database.type !== 'sqlite3'">
         <n-form-item label="主机:" path="dbHost">
           <n-input
             v-model:value="config.database.host"
@@ -25,9 +25,9 @@
           />
         </n-form-item>
         <n-form-item label="端口:" path="dbPort">
-        <n-input
-          v-model:value="config.database.port"
-          @update:value="(val: string) => {
+          <n-input
+            v-model:value="config.database.port"
+            @update:value="(val: string) => {
             // Only allow numeric input and limit length
             const numericValue = val.replace(/\D/g, '').slice(0, 5);
             if (numericValue.length > 0) {
@@ -41,9 +41,9 @@
             config.database.port = '';
             return '';
           }"
-          :placeholder="defaultPort"
-          type="text"
-        />
+            :placeholder="defaultPort"
+            type="text"
+          />
         </n-form-item>
         <n-form-item label="用户名:" path="dbUser">
           <n-input
@@ -71,10 +71,10 @@
         </n-alert>
       </n-form-item>
 
-      <template v-if="config?.database && config.database.type === 'sqlite'">
-        <n-form-item label="数据库文件:" path="dbFile">
+      <template v-if="config?.database && config.database.type === 'sqlite3'">
+        <n-form-item label="数据库文件:" path="db_file">
           <n-input
-            v-model:value="config.database.dbFile"
+            v-model:value="config.database.db_file"
             placeholder="数据库文件路径"
           />
         </n-form-item>
@@ -91,14 +91,14 @@
         </n-alert>
       </n-form-item>
 
-      <template v-if="config?.database && config.database.type !== 'sqlite'">
-        <n-form-item label="SSL模式:" path="sslMode">
+      <template v-if="config?.database && config.database.type !== 'sqlite3'">
+        <n-form-item label="SSL模式:" path="ssl_mode">
           <n-select
-            v-model:value="config.database.sslMode"
+            v-model:value="config.database.ssl_mode"
             :options="[
               { label: '禁用', value: 'disable' },
               { label: '要求', value: 'require' },
-              { label: '完全验证', value: 'verify-full' }
+              { label: '完全验证', value: 'verify-full' },
             ]"
           />
         </n-form-item>
@@ -115,10 +115,10 @@
 
 <script setup lang="ts">
 import { defineProps, computed } from "vue";
-import { NForm, NFormItem, NSelect, NInput } from 'naive-ui';
+import { NForm, NFormItem, NSelect, NInput } from "naive-ui";
 
-type DatabaseType = 'mysql' | 'postgres' | 'sqlite';
-type SSLMode = 'disable' | 'require' | 'verify-full';
+type DatabaseType = "mysql" | "postgres" | "sqlite3";
+type SSLMode = "disable" | "require" | "verify-full";
 
 interface DatabaseConfig {
   type: DatabaseType;
@@ -127,9 +127,9 @@ interface DatabaseConfig {
   user: string;
   password: string;
   name: string;
-  dbFile: string;
+  db_file: string;
   tablePrefix: string;
-  sslMode: SSLMode;
+  ssl_mode: SSLMode;
   dsn: string;
 }
 
@@ -137,33 +137,36 @@ interface Config {
   database: DatabaseConfig;
 }
 
-const props = withDefaults(defineProps<{
-  config: Config;
-}>(), {
-  config: () => ({
-    database: {
-      type: 'sqlite',
-      host: '',
-      port: '',
-      user: '',
-      password: '',
-      name: '',
-      dbFile: '',
-      tablePrefix: '',
-      sslMode: 'disable',
-      dsn: ''
-    }
-  })
-});
+const props = withDefaults(
+  defineProps<{
+    config: Config;
+  }>(),
+  {
+    config: () => ({
+      database: {
+        type: "sqlite3",
+        host: "",
+        port: "0",
+        user: "",
+        password: "",
+        name: "",
+        db_file: "data\\data.db",
+        tablePrefix: "x_",
+        ssl_mode: "disable",
+        dsn: "",
+      },
+    }),
+  }
+);
 
 const defaultPort = computed(() => {
   switch (props.config.database.type) {
-    case 'mysql':
-      return '3306';
-    case 'postgres':
-      return '5432';
+    case "mysql":
+      return "3306";
+    case "postgres":
+      return "5432";
     default:
-      return '';
+      return "";
   }
 });
 </script>

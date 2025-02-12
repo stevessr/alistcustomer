@@ -1,23 +1,30 @@
 <script setup lang="ts">
-import { NButton } from 'naive-ui';
-import { useMessage } from 'naive-ui';
+import { NButton } from "naive-ui";
+import { useMessage } from "naive-ui";
 
 const message = useMessage();
-const emit = defineEmits(['save-config', 'preview-config']);
+const emit = defineEmits<{
+  (e: 'save-config'): void
+  (e: 'preview-config', config: any): void // 明确声明参数类型
+}>()
 
 const handleSave = () => {
   try {
-    emit('save-config');
-    message.success('配置保存成功');
+    emit("save-config");
+    message.success("配置保存成功");
   } catch (error) {
     message.error(`配置保存失败: ${error}`);
   }
 };
+
+defineProps<{
+  config?: any; // 需要添加类型定义
+}>();
 </script>
 
 <template>
   <div class="config-actions-side">
-    <n-button 
+    <n-button
       type="info"
       size="large"
       @click="emit('preview-config')"
@@ -25,11 +32,7 @@ const handleSave = () => {
     >
       预览配置
     </n-button>
-    <n-button 
-      type="primary"
-      size="large"
-      @click="handleSave"
-    >
+    <n-button type="primary" size="large" @click="handleSave">
       保存配置
     </n-button>
   </div>

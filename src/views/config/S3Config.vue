@@ -23,7 +23,11 @@ const props = withDefaults(defineProps<{
   })
 });
 
-const s3Config = computed(() => props.config.s3);
+const s3Config = computed(() => props.config?.s3 ?? {
+  enable: false,
+  port: 9000,
+  ssl: false
+});
 </script>
 
 <template>
