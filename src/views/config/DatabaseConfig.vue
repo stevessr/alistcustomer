@@ -2,22 +2,25 @@
   <div class="config-section">
     <h2>数据库配置</h2>
     <n-form>
-      <n-form-item label="数据库类型:" path="dbType">
+      <n-form-item label="数据库类型">
         <n-select
-          v-if="config?.database"
-          v-model:value="config.database.type"
+          :value="config.database.type"
+          @update:value="
+            (val) =>
+              emit('update:config', {
+                ...config,
+                database: { ...config.database, type: val },
+              })
+          "
           :options="[
             { label: 'MySQL', value: 'mysql' },
             { label: 'PostgreSQL', value: 'postgres' },
             { label: 'SQLite', value: 'sqlite3' },
           ]"
         />
-        <n-alert v-else type="error">
-          配置加载失败，请刷新页面或联系管理员
-        </n-alert>
       </n-form-item>
 
-      <template v-if="config?.database && config.database.type !== 'sqlite3'">
+      <template v-if="config.database && config.database.type !== 'sqlite3'">
         <n-form-item label="主机:" path="dbHost">
           <n-input
             v-model:value="config.database.host"
@@ -26,23 +29,11 @@
         </n-form-item>
         <n-form-item label="端口:" path="dbPort">
           <n-input
-            v-model:value="config.database.port"
-            @update:value="(val: string) => {
-            // Only allow numeric input and limit length
-            const numericValue = val.replace(/\D/g, '').slice(0, 5);
-            if (numericValue.length > 0) {
-              // Validate port range using string length and first digit
-              if (numericValue.length <= 5 && 
-                  (numericValue.length < 5 || numericValue[0] <= '6')) {
-                config.database.port = numericValue;
-                return numericValue;
-              }
-            }
-            config.database.port = '';
-            return '';
-          }"
-            :placeholder="defaultPort"
-            type="text"
+            :value="String(config.database.port)"
+            @update:value="handlePortInput"
+            placeholder="请输入端口号"
+            inputmode="numeric"
+            pattern="[0-9]*"
           />
         </n-form-item>
         <n-form-item label="用户名:" path="dbUser">
@@ -62,7 +53,7 @@
 
       <n-form-item label="数据库名称:" path="dbName">
         <n-input
-          v-if="config?.database"
+          v-if="config.database"
           v-model:value="config.database.name"
           placeholder="数据库名称"
         />
@@ -71,7 +62,7 @@
         </n-alert>
       </n-form-item>
 
-      <template v-if="config?.database && config.database.type === 'sqlite3'">
+      <template v-if="config.database && config.database.type === 'sqlite3'">
         <n-form-item label="数据库文件:" path="db_file">
           <n-input
             v-model:value="config.database.db_file"
@@ -80,18 +71,15 @@
         </n-form-item>
       </template>
 
-      <n-form-item label="表前缀:" path="tablePrefix">
+      <n-form-item label="表前缀:" path="table_prefix">
         <n-input
-          v-if="config?.database"
-          v-model:value="config.database.tablePrefix"
+          v-model:value="config.database.table_prefix"
+          @update:value="val => config.database && (config.database.table_prefix = val)"
           placeholder="可选表前缀"
         />
-        <n-alert v-else type="error">
-          配置加载失败，请刷新页面或联系管理员
-        </n-alert>
       </n-form-item>
 
-      <template v-if="config?.database && config.database.type !== 'sqlite3'">
+      <template v-if="config.database && config.database.type !== 'sqlite3'">
         <n-form-item label="SSL模式:" path="ssl_mode">
           <n-select
             v-model:value="config.database.ssl_mode"
@@ -114,50 +102,49 @@
 </template>
 
 <script setup lang="ts">
-import { defineProps, computed } from "vue";
+import { defineProps, computed, onMounted, toRef } from "vue";
 import { NForm, NFormItem, NSelect, NInput } from "naive-ui";
-
-type DatabaseType = "mysql" | "postgres" | "sqlite3";
-type SSLMode = "disable" | "require" | "verify-full";
-
-interface DatabaseConfig {
-  type: DatabaseType;
-  host: string;
-  port: string;
-  user: string;
-  password: string;
-  name: string;
-  db_file: string;
-  tablePrefix: string;
-  ssl_mode: SSLMode;
-  dsn: string;
-}
+import type { PropType } from "vue";
 
 interface Config {
-  database: DatabaseConfig;
+  database: {
+    type: string;
+    host: string; // 数据库服务器地址
+    port: number; // 数据库端口
+    user: string; // 认证用户名
+    password: string; // 认证密码
+    name: string;
+    db_file: string;
+    table_prefix: string;
+    ssl_mode: string; // SSL 模式（根据数据库类型可选值不同）
+    dsn: string; // 自定义连接字符串
+  };
 }
 
-const props = withDefaults(
-  defineProps<{
-    config: Config;
-  }>(),
-  {
-    config: () => ({
+const props = defineProps({
+  config: {
+    type: Object as PropType<Config>,
+    required: true,
+    default: () => ({
       database: {
         type: "sqlite3",
         host: "",
-        port: "0",
+        port: 0,
         user: "",
         password: "",
         name: "",
         db_file: "data\\data.db",
-        tablePrefix: "x_",
-        ssl_mode: "disable",
+        table_prefix: "x_",
+        ssl_mode: "",
         dsn: "",
       },
     }),
-  }
-);
+  },
+});
+
+const config = toRef(props, "config");
+const databaseConfig = computed(() => config.value);
+const emit = defineEmits(["update:config"]);
 
 const defaultPort = computed(() => {
   switch (props.config.database.type) {
@@ -168,6 +155,23 @@ const defaultPort = computed(() => {
     default:
       return "";
   }
+});
+
+const handlePortInput = (val: string | number) => {
+  const numericValue = Math.min(Math.max(parseInt(String(val)) || 0, 0), 65535);
+  // 使用 emit 更新配置
+  emit("update:config", {
+    ...config.value,
+    database: {
+      ...config.value.database,
+      port: numericValue,
+    },
+  });
+};
+
+onMounted(() => {
+  console.log("loaded");
+  console.log("why", props.config.database);
 });
 </script>
 
