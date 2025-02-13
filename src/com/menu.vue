@@ -120,7 +120,7 @@ const menuOptions: MenuOption[] = [
       ),
     key: "config",
     icon: renderIcon(status),
-    disabled: false,
+    disabled: true,
   },
   {
     label: () =>
