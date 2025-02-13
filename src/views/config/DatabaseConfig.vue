@@ -1,17 +1,10 @@
 <template>
+  <h>数据库配置</h>
   <div class="config-section">
-    <h2>数据库配置</h2>
     <n-form>
       <n-form-item label="数据库类型">
         <n-select
-          :value="config.database.type"
-          @update:value="
-            (val) =>
-              emit('update:config', {
-                ...config,
-                database: { ...config.database, type: val },
-              })
-          "
+          :value="props.config.type.value"
           :options="[
             { label: 'MySQL', value: 'mysql' },
             { label: 'PostgreSQL', value: 'postgres' },
@@ -20,16 +13,13 @@
         />
       </n-form-item>
 
-      <template v-if="config.database && config.database.type !== 'sqlite3'">
+      <template v-if="config">
         <n-form-item label="主机:" path="dbHost">
-          <n-input
-            v-model:value="config.database.host"
-            placeholder="localhost"
-          />
+          <n-input v-model:value="config.host" placeholder="localhost" />
         </n-form-item>
         <n-form-item label="端口:" path="dbPort">
           <n-input
-            :value="String(config.database.port)"
+            :value="String(config.port)"
             @update:value="handlePortInput"
             placeholder="请输入端口号"
             inputmode="numeric"
@@ -37,14 +27,11 @@
           />
         </n-form-item>
         <n-form-item label="用户名:" path="dbUser">
-          <n-input
-            v-model:value="config.database.user"
-            placeholder="数据库用户"
-          />
+          <n-input v-model:value="config.user" placeholder="数据库用户" />
         </n-form-item>
         <n-form-item label="密码:" path="dbPassword">
           <n-input
-            v-model:value="config.database.password"
+            v-model:value="config.password"
             type="password"
             placeholder="数据库密码"
           />
@@ -53,8 +40,8 @@
 
       <n-form-item label="数据库名称:" path="dbName">
         <n-input
-          v-if="config.database"
-          v-model:value="config.database.name"
+          v-if="config"
+          v-model:value="config.name"
           placeholder="数据库名称"
         />
         <n-alert v-else type="error">
@@ -62,10 +49,10 @@
         </n-alert>
       </n-form-item>
 
-      <template v-if="config.database && config.database.type === 'sqlite3'">
+      <template v-if="config && config.type === 'sqlite3'">
         <n-form-item label="数据库文件:" path="db_file">
           <n-input
-            v-model:value="config.database.db_file"
+            v-model:value="config.db_file"
             placeholder="数据库文件路径"
           />
         </n-form-item>
@@ -73,16 +60,17 @@
 
       <n-form-item label="表前缀:" path="table_prefix">
         <n-input
-          v-model:value="config.database.table_prefix"
-          @update:value="val => config.database && (config.database.table_prefix = val)"
+          v-if="config"
+          v-model:value="config.table_prefix"
+          @update:value="(val) => config && (config.table_prefix = val)"
           placeholder="可选表前缀"
         />
       </n-form-item>
 
-      <template v-if="config.database && config.database.type !== 'sqlite3'">
+      <template v-if="config && config.type !== 'sqlite3'">
         <n-form-item label="SSL模式:" path="ssl_mode">
           <n-select
-            v-model:value="config.database.ssl_mode"
+            v-model:value="config.ssl_mode"
             :options="[
               { label: '禁用', value: 'disable' },
               { label: '要求', value: 'require' },
@@ -91,10 +79,7 @@
           />
         </n-form-item>
         <n-form-item label="DSN:" path="dsn">
-          <n-input
-            v-model:value="config.database.dsn"
-            placeholder="可选DSN字符串"
-          />
+          <n-input v-model:value="config.dsn" placeholder="可选DSN字符串" />
         </n-form-item>
       </template>
     </n-form>
@@ -147,7 +132,7 @@ const databaseConfig = computed(() => config.value);
 const emit = defineEmits(["update:config"]);
 
 const defaultPort = computed(() => {
-  switch (props.config.database.type) {
+  switch (props.config.type) {
     case "mysql":
       return "3306";
     case "postgres":
@@ -170,8 +155,7 @@ const handlePortInput = (val: string | number) => {
 };
 
 onMounted(() => {
-  console.log("loaded");
-  console.log("why", props.config.database);
+  console.log("datbase:", props.config);
 });
 </script>
 

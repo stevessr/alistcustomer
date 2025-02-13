@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type { Component } from "vue";
-import { shallowRef, markRaw, ref } from "vue";
+import { shallowRef, markRaw, ref, onMounted } from "vue";
 import { invoke } from "@tauri-apps/api/core";
 import { NTabs, NTabPane } from "naive-ui";
 import ConfigColorPicker from "./ConfigColorPicker.vue";
@@ -32,7 +32,29 @@ interface SectionColors {
   sftp: string;
 }
 
-interface Config {
+onMounted(() => {
+  invoke("read_config")
+    .then((data: any) => {
+      if (data?.database) {
+        data.database.port = Number(data.database.port) || 0;
+      }
+      if (data) {
+        const merged = deepMerge({ ...config.value }, data);
+        config.value = merged;
+        if (import.meta.env.MODE === "development") {
+          console.log("Loaded config:", config.value);
+        }
+      }
+    })
+    .catch((error) => {
+      console.error("Failed to load config:", error);
+      if (import.meta.env.MODE === "development") {
+        console.error("Error details:", error);
+      }
+    });
+});
+
+export interface Config {
   section_colors: SectionColors;
   general?: {
     force: boolean;
@@ -143,25 +165,6 @@ function deepMerge(target: any, source: any) {
   return target;
 }
 
-invoke("read_config")
-  .then((data: any) => {
-    if (data?.database) {
-      data.database.port = Number(data.database.port) || 0;
-    }
-    if (data) {
-      const merged = deepMerge({ ...config.value }, data);
-      config.value = merged;
-      if (import.meta.env.MODE === "development") {
-        console.log("Loaded config:", config.value);
-      }
-    }
-  })
-  .catch((error) => {
-    console.error("Failed to load config:", error);
-    if (import.meta.env.MODE === "development") {
-      console.error("Error details:", error);
-    }
-  });
 
 // 只保留一个 configComponents 定义
 // 添加更严格的类型定义
@@ -181,8 +184,7 @@ const configComponents = shallowRef<ConfigComponent[]>([
     id: "database",
     component: markRaw(DatabaseConfig),
     props: () => ({
-      config: config.value?.database ?? {
-        // 添加双重保护
+      config: config.value.database ?? {
         type: "sqlite3",
         host: "",
         port: 0,
@@ -261,7 +263,7 @@ const handleSave = async () => {
         }
       "
     />
-    <n-tabs type="line" animated>
+    <n-tabs v-if="config" type="line" animated>
       <n-tab-pane
         v-for="tab in configComponents"
         :key="tab.id"

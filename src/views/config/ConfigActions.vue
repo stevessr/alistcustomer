@@ -5,21 +5,26 @@ import { useMessage } from "naive-ui";
 const message = useMessage();
 const emit = defineEmits<{
   (e: 'save-config'): void
-  (e: 'preview-config', config: any): void // 明确声明参数类型
+  (e: 'preview-config', config: unknown): void // 使用 unknown 替代 any 更安全
 }>()
+
+// 正确解构 props
+const { config } = defineProps<{
+  config?: unknown; // 使用 unknown 类型
+}>();
 
 const handleSave = () => {
   try {
+    if (!config) {
+      throw new Error('配置不能为空');
+    }
     emit("save-config");
-    message.success("配置保存成功");
   } catch (error) {
-    message.error(`配置保存失败: ${error}`);
+    message.error(`保存失败: ${error instanceof Error ? error.message : '未知错误'}`);
+    console.error(error);
   }
 };
 
-defineProps<{
-  config?: any; // 需要添加类型定义
-}>();
 </script>
 
 <template>
